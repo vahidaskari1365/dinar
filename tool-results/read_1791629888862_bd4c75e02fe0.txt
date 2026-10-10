@@ -1,0 +1,873 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+     4→import { motion, AnimatePresence } from "framer-motion";
+     5→import {
+     6→  ArrowLeftRight,
+     7→  ArrowDownToLine,
+     8→  ArrowUpFromLine,
+     9→  Coins,
+    10→  CreditCard,
+    11→  Loader2,
+    12→  Plus,
+    13→  RefreshCw,
+    14→  Snowflake,
+    15→  TrendingUp,
+    16→  Wallet2,
+    17→} from "lucide-react";
+    18→import { Input } from "@/components/ui/input";
+    19→import { Label } from "@/components/ui/label";
+    20→import { Button } from "@/components/ui/button";
+    21→import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+    22→import {
+    23→  Dialog,
+    24→  DialogContent,
+    25→  DialogDescription,
+    26→  DialogHeader,
+    27→  DialogTitle,
+    28→} from "@/components/ui/dialog";
+    29→import { useToast } from "@/hooks/use-toast";
+    30→import { faCompact, faDateTime, toFa, faTimeAgo } from "@/lib/format";
+    31→import { convert, currentPrices, type Prices } from "@/lib/prices";
+    32→import { BlurFade } from "@/components/ui/blur-fade";
+    33→import { BorderBeam } from "@/components/ui/border-beam";
+    34→import { GoldChart, useChartHeight } from "./gold-chart";
+    35→
+    36→/* ---------- types ---------- */
+    37→type Tx = {
+    38→  id: string;
+    39→  type: string;
+    40→  asset: string;
+    41→  amount: number;
+    42→  meta: string | null;
+    43→  createdAt: string;
+    44→};
+    45→type Card = {
+    46→  id: string;
+    47→  number: string;
+    48→  expMonth: number;
+    49→  expYear: number;
+    50→  status: string;
+    51→  createdAt: string;
+    52→};
+    53→type WalletData = {
+    54→  wallet: { irr: number; usdt: number; gold: number };
+    55→  cards: Card[];
+    56→  transactions: Tx[];
+    57→};
+    58→
+    59→const CARD_FEE = 120_000;
+    60→
+    61→/* ---------- helpers ---------- */
+    62→function parseNum(s: string): number {
+    63→  const fa = "۰۱۲۳۴۵۶۷۸۹";
+    64→  const ar = "٠١٢٣٤٥٦٧٨٩";
+    65→  let out = "";
+    66→  for (const ch of s) {
+    67→    const fi = fa.indexOf(ch);
+    68→    const ai = ar.indexOf(ch);
+    69→    out += fi >= 0 ? String(fi) : ai >= 0 ? String(ai) : ch;
+    70→  }
+    71→  return Number(out.replace(/[,\s٬]/g, "")) || 0;
+    72→}
+    73→
+    74→const TX_META: Record<string, { label: string; tone: string; icon: React.ElementType }> = {
+    75→  deposit: { label: "واریز", tone: "text-success bg-success/10", icon: ArrowDownToLine },
+    76→  withdraw: { label: "برداشت", tone: "text-foreground/70 bg-white/5", icon: ArrowUpFromLine },
+    77→  gold_buy: { label: "خرید طلا", tone: "text-primary bg-primary/10", icon: Coins },
+    78→  gold_sell: { label: "فروش طلا", tone: "text-foreground/70 bg-white/5", icon: Coins },
+    79→  exchange: { label: "تبدیل ارز", tone: "text-foreground/70 bg-white/5", icon: ArrowLeftRight },
+    80→  card_issue: { label: "صدور کارت", tone: "text-foreground/70 bg-white/5", icon: CreditCard },
+    81→  profit: { label: "پاداش ماهانه", tone: "text-success bg-success/10", icon: TrendingUp },
+    82→};
+    83→
+    84→function fmtAsset(asset: string, amount: number): string {
+    85→  if (asset === "IRR") return `${toFa(amount)} تومان`;
+    86→  if (asset === "USDT") return `${toFa(amount, 2)} تتر`;
+    87→  if (asset === "GOLD") return `${toFa(amount, 3)} گرم`;
+    88→  return toFa(amount);
+    89→}
+    90→
+    91→/* ---------- hook ---------- */
+    92→function useWallet() {
+    93→  const [data, setData] = useState<WalletData | null>(null);
+    94→  const [loading, setLoading] = useState(true);
+    95→  const refresh = useCallback(async () => {
+    96→    try {
+    97→      const res = await fetch("/api/wallet", { cache: "no-store" });
+    98→      if (res.ok) setData(await res.json());
+    99→    } finally {
+   100→      setLoading(false);
+   101→    }
+   102→  }, []);
+   103→  useEffect(() => {
+   104→    refresh();
+   105→  }, [refresh]);
+   106→  return { data, loading, refresh };
+   107→}
+   108→
+   109→function usePrices(intervalMs = 4000) {
+   110→  const [prices, setPrices] = useState<Prices | null>(null);
+   111→  const histRef = useRef<number[]>([]);
+   112→  const [hist, setHist] = useState<number[]>([]);
+   113→
+   114→  useEffect(() => {
+   115→    let alive = true;
+   116→    const tick = () => {
+   117→      const p = currentPrices();
+   118→      if (!alive) return;
+   119→      setPrices(p);
+   120→      histRef.current = [...histRef.current.slice(-47), p.gold];
+   121→      setHist(histRef.current);
+   122→    };
+   123→    tick();
+   124→    const id = setInterval(tick, intervalMs);
+   125→    return () => {
+   126→      alive = false;
+   127→      clearInterval(id);
+   128→    };
+   129→  }, [intervalMs]);
+   130→
+   131→  return { prices, hist };
+   132→}
+   133→
+   134→/* ================================================================ */
+   135→export function WalletDemo() {
+   136→  return (
+   137→    <section id="demo" className="relative border-t border-border px-4 py-20 sm:px-6 md:py-28 lg:px-8">
+   138→      <div className="mx-auto max-w-6xl">
+   139→        <BlurFade inView inViewMargin="-80px">
+   140→        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+   141→          <div className="max-w-2xl">
+   142→            <p className="mb-3 font-mono text-xs tracking-[0.3em] text-primary">LIVE DEMO</p>
+   143→            <h2 className="text-3xl font-black tracking-tighter md:text-[2.6rem] md:leading-tight">
+   144→              دموی زنده — همین حالا امتحان کنید
+   145→            </h2>
+   146→            <p className="mt-4 leading-relaxed text-muted-foreground">
+   147→              یک کیف پول واقعی روی سرور دمو: واریز کنید، طلا بخرید، تتر تبدیل
+   148→              کنید و کارت مجازی صادر کنید. نرخ‌ها هر ثانیه از موتور قیمت به‌روز
+   149→              می‌شوند.
+   150→            </p>
+   151→          </div>
+   152→          <span className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs text-muted-foreground">
+   153→            <span className="breathe size-1.5 rounded-full bg-success" />
+   154→            موتور قیمت فعال
+   155→          </span>
+   156→        </div>
+   157→        </BlurFade>
+   158→
+   159→        <Dashboard />
+   160→      </div>
+   161→    </section>
+   162→  );
+   163→}
+   164→
+   165→/* ================================================================ */
+   166→function Dashboard() {
+   167→  const { data, loading, refresh } = useWallet();
+   168→  const { prices, hist } = usePrices();
+   169→  const chartH = useChartHeight();
+   170→  const { toast } = useToast();
+   171→  const [busy, setBusy] = useState<string | null>(null);
+   172→  const [dialog, setDialog] = useState<null | "deposit" | "withdraw" | "convert" | "card">(null);
+   173→
+   174→  const act = useCallback(
+   175→    async (key: string, url: string, body: Record<string, unknown>, okMsg: string) => {
+   176→      setBusy(key);
+   177→      try {
+   178→        const res = await fetch(url, {
+   179→          method: "POST",
+   180→          headers: { "Content-Type": "application/json" },
+   181→          body: JSON.stringify(body),
+   182→        });
+   183→        const json = await res.json();
+   184→        if (!res.ok) throw new Error(json.error || "خطا در انجام عملیات");
+   185→        await refresh();
+   186→        setDialog(null);
+   187→        toast({ title: okMsg, description: json.summary });
+   188→      } catch (e) {
+   189→        toast({
+   190→          title: "انجام نشد",
+   191→          description: e instanceof Error ? e.message : "دوباره تلاش کنید",
+   192→          variant: "destructive",
+   193→        });
+   194→      } finally {
+   195→        setBusy(null);
+   196→      }
+   197→    },
+   198→    [refresh, toast]
+   199→  );
+   200→
+   201→  if (loading || !data || !prices) {
+   202→    return (
+   203→      <div className="grid gap-4 md:grid-cols-3">
+   204→        {[0, 1, 2].map((i) => (
+   205→          <div key={i} className="h-36 animate-pulse rounded-3xl border border-border bg-surface" />
+   206→        ))}
+   207→        <div className="h-72 animate-pulse rounded-3xl border border-border bg-surface md:col-span-3" />
+   208→      </div>
+   209→    );
+   210→  }
+   211→
+   212→  const w = data.wallet;
+   213→
+   214→  return (
+   215→    <>
+   216→      {/* Balance strip — asymmetric */}
+   217→      <div className="grid gap-4 md:grid-cols-3">
+   218→        {/* Main IRR */}
+   219→        <motion.div
+   220→          layout
+   221→          className="relative min-w-0 overflow-hidden rounded-3xl border border-primary/25 bg-[linear-gradient(140deg,oklch(0.20_0.035_262),oklch(0.155_0.018_265)_60%,oklch(0.24_0.05_88))] p-6 md:col-span-2"
+   222→        >
+   223→          <div className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" />
+   224→          <BorderBeam size={180} duration={12} colorFrom="#e8c877" colorTo="#6f8fd9" className="rounded-3xl" />
+   225→          <div className="flex items-start justify-between gap-3 max-sm:flex-col-reverse">
+   226→            <div>
+   227→              <p className="flex items-center gap-2 text-xs text-foreground/60">
+   228→                <Wallet2 className="size-3.5" aria-hidden />
+   229→                موجودی تومانی
+   230→              </p>
+   231→              <p className="tnum text-shimmer mt-3 font-mono text-3xl font-black tracking-tight sm:text-4xl md:text-5xl" dir="ltr">
+   232→                {toFa(Math.round(w.irr))}
+   233→                <span className="mr-2 text-sm font-medium text-foreground/50">تومان</span>
+   234→              </p>
+   235→              <p className="tnum mt-2 text-xs text-foreground/50" dir="ltr">
+   236→                ≈ {faCompact(w.irr / prices.usdt)} تتر
+   237→              </p>
+   238→            </div>
+   239→            <span className="rounded-xl border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-bold text-primary">
+   240→              پاداش ۴٫۲٪ ماهانه
+   241→            </span>
+   242→          </div>
+   243→          <div className="mt-6 flex flex-wrap gap-2">
+   244→            <Button className="h-11 rounded-xl px-4 font-bold active:scale-[0.98]" onClick={() => setDialog("deposit")}>
+   245→              <Plus className="size-4" aria-hidden />
+   246→              واریز
+   247→            </Button>
+   248→            <Button variant="secondary" className="h-11 rounded-xl px-4 active:scale-[0.98]" onClick={() => setDialog("withdraw")}>
+   249→              <ArrowUpFromLine className="size-4" aria-hidden />
+   250→              برداشت
+   251→            </Button>
+   252→            <Button variant="secondary" className="h-11 rounded-xl px-4 active:scale-[0.98]" onClick={() => setDialog("convert")}>
+   253→              <ArrowLeftRight className="size-4" aria-hidden />
+   254→              تبدیل
+   255→            </Button>
+   256→            <Button variant="ghost" className="h-11 rounded-xl border border-border px-4 active:scale-[0.98]" onClick={() => setDialog("card")}>
+   257→              <CreditCard className="size-4" aria-hidden />
+   258→              کارت جدید
+   259→            </Button>
+   260→          </div>
+   261→        </motion.div>
+   262→
+   263→        {/* Side assets */}
+   264→        <div className="grid min-w-0 gap-4">
+   265→          <motion.div layout className="rounded-3xl border border-border bg-surface p-6">
+   266→            <div className="flex items-center justify-between">
+   267→              <p className="text-xs text-muted-foreground">موجودی تتر</p>
+   268→              <span className="grid size-8 place-items-center rounded-lg bg-foreground/[0.06] text-foreground/70">
+   269→                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden>
+   270→                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 8.9v1.7h-3.7v1.2h3.7v1.7h-3.7v2.6h-1.8v-2.6H7.4v-1.7h3.7v-1.2H7.4v-1.7h6.6l-1.4-1.4 1.2-1.2 3 3-3 3-1.2-1.2 1.3-1.4h-.7Z" />
+   271→                </svg>
+   272→              </span>
+   273→            </div>
+   274→            <p className="tnum mt-3 font-mono text-2xl font-black" dir="ltr">
+   275→              {toFa(w.usdt, 2)}
+   276→              <span className="mr-1.5 text-xs font-medium text-muted-foreground">USDT</span>
+   277→            </p>
+   278→            <p className="tnum mt-1 text-[11px] text-muted-foreground" dir="ltr">
+   279→              ≈ {toFa(Math.round(w.usdt * prices.usdt))} تومان
+   280→            </p>
+   281→          </motion.div>
+   282→
+   283→          <motion.div layout className="rounded-3xl border border-border bg-surface p-6">
+   284→            <div className="flex items-center justify-between">
+   285→              <p className="text-xs text-muted-foreground">طلای شما</p>
+   286→              <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary">
+   287→                <Coins className="size-4" aria-hidden />
+   288→              </span>
+   289→            </div>
+   290→            <p className="tnum mt-3 font-mono text-2xl font-black" dir="ltr">
+   291→              {toFa(w.gold, 3)}
+   292→              <span className="mr-1.5 text-xs font-medium text-muted-foreground">گرم ۱۸</span>
+   293→            </p>
+   294→            <p className="tnum mt-1 text-[11px] text-muted-foreground" dir="ltr">
+   295→              ≈ {toFa(Math.round(w.gold * prices.gold))} تومان
+   296→            </p>
+   297→          </motion.div>
+   298→        </div>
+   299→      </div>
+   300→
+   301→      {/* Market + trade */}
+   302→      <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
+   303→        {/* Gold market */}
+   304→        <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
+   305→          <div className="flex flex-wrap items-center justify-between gap-3">
+   306→            <div>
+   307→              <p className="font-extrabold tracking-tight">بازار طلا — هر گرم ۱۸ عیار</p>
+   308→              <p className="tnum mt-1.5 font-mono text-2xl font-black text-primary" dir="ltr">
+   309→                {toFa(prices.gold)} <span className="text-xs font-medium text-muted-foreground">تومان</span>
+   310→              </p>
+   311→            </div>
+   312→            <div className="flex gap-2">
+   313→              <div className="rounded-xl border border-border bg-background/40 px-3 py-2 text-center">
+   314→                <p className="text-[10px] text-muted-foreground">تتر</p>
+   315→                <p className="tnum font-mono text-sm font-bold" dir="ltr">
+   316→                  {toFa(prices.usdt)}
+   317→                </p>
+   318→              </div>
+   319→              <div className="rounded-xl border border-border bg-background/40 px-3 py-2 text-center">
+   320→                <p className="text-[10px] text-muted-foreground">دلار</p>
+   321→                <p className="tnum font-mono text-sm font-bold" dir="ltr">
+   322→                  {toFa(prices.usd)}
+   323→                </p>
+   324→              </div>
+   325→            </div>
+   326→          </div>
+   327→          <div className="mt-5">
+   328→            <GoldChart data={hist} height={chartH} />
+   329→          </div>
+   330→        </div>
+   331→
+   332→        {/* Gold trade panel */}
+   333→        <GoldPanel
+   334→          prices={prices}
+   335→          wallet={w}
+   336→          busy={busy}
+   337→          onTrade={(action, grams) =>
+   338→            act(
+   339→              `gold-${action}`,
+   340→              "/api/wallet/gold",
+   341→              { action, grams },
+   342→              action === "buy" ? "طلای شما خریداری شد" : "طلا با موفقیت فروخته شد"
+   343→            )
+   344→          }
+   345→        />
+   346→      </div>
+   347→
+   348→      {/* Activity + cards */}
+   349→      <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
+   350→        <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
+   351→          <div className="flex items-center justify-between">
+   352→            <p className="font-extrabold tracking-tight">گردش حساب</p>
+   353→            <button
+   354→              onClick={refresh}
+   355→              className="grid size-11 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
+   356→              aria-label="به‌روزرسانی"
+   357→            >
+   358→              <RefreshCw className="size-3.5" aria-hidden />
+   359→            </button>
+   360→          </div>
+   361→          <div className="mt-4 max-h-96 space-y-2 overflow-y-auto pb-2 pl-1 [scrollbar-width:thin]">
+   362→            {data.transactions.length === 0 ? (
+   363→              <div className="grid place-items-center rounded-2xl border border-dashed border-border py-12 text-center">
+   364→                <Wallet2 className="size-8 text-muted-foreground/40" aria-hidden />
+   365→                <p className="mt-3 text-sm font-semibold text-muted-foreground">هنوز گردشی ثبت نشده</p>
+   366→                <p className="mt-1 text-xs text-muted-foreground/70">
+   367→                  اولین واریز را انجام دهید تا اینجا دیده شود.
+   368→                </p>
+   369→              </div>
+   370→            ) : (
+   371→              <AnimatePresence initial={false}>
+   372→                {data.transactions.map((t) => {
+   373→                  const m = TX_META[t.type] ?? TX_META.exchange;
+   374→                  return (
+   375→                    <motion.div
+   376→                      key={t.id}
+   377→                      layout
+   378→                      initial={{ opacity: 0, y: -10 }}
+   379→                      animate={{ opacity: 1, y: 0 }}
+   380→                      className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/40 px-4 py-3"
+   381→                    >
+   382→                      <div className="flex items-center gap-3">
+   383→                        <span className={`grid size-9 place-items-center rounded-xl ${m.tone}`}>
+   384→                          <m.icon className="size-4" aria-hidden />
+   385→                        </span>
+   386→                        <div>
+   387→                          <p className="text-sm font-semibold leading-none">{m.label}</p>
+   388→                          <p className="mt-1.5 text-[11px] text-muted-foreground">
+   389→                            {faTimeAgo(t.createdAt)} • {faDateTime(t.createdAt)}
+   390→                          </p>
+   391→                        </div>
+   392→                      </div>
+   393→                      <p className="tnum font-mono text-sm font-bold text-foreground/90" dir="ltr">
+   394→                        {fmtAsset(t.asset, t.amount)}
+   395→                      </p>
+   396→                    </motion.div>
+   397→                  );
+   398→                })}
+   399→              </AnimatePresence>
+   400→            )}
+   401→          </div>
+   402→        </div>
+   403→
+   404→        {/* Cards */}
+   405→        <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
+   406→          <div className="flex items-center justify-between">
+   407→            <p className="font-extrabold tracking-tight">کارت‌های من</p>
+   408→            <Button variant="outline" className="h-11 rounded-xl px-4" onClick={() => setDialog("card")}>
+   409→              <Plus className="size-4" aria-hidden />
+   410→              صدور کارت
+   411→            </Button>
+   412→          </div>
+   413→          <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pb-2 [scrollbar-width:thin]">
+   414→            {data.cards.length === 0 ? (
+   415→              <div className="grid place-items-center rounded-2xl border border-dashed border-border py-12 text-center">
+   416→                <CreditCard className="size-8 text-muted-foreground/40" aria-hidden />
+   417→                <p className="mt-3 text-sm font-semibold text-muted-foreground">کارت virtual ندارید</p>
+   418→                <p className="mt-1 text-xs text-muted-foreground/70">
+   419→                  با کارمزد {toFa(CARD_FEE)} تومانی صادر کنید.
+   420→                </p>
+   421→              </div>
+   422→            ) : (
+   423→              data.cards.map((c) => (
+   424→                <motion.div
+   425→                  key={c.id}
+   426→                  layout
+   427→                  initial={{ opacity: 0, scale: 0.96 }}
+   428→                  animate={{ opacity: 1, scale: 1 }}
+   429→                  className={`relative overflow-hidden rounded-2xl border p-4 ${
+   430→                    c.status === "frozen"
+   431→                      ? "border-border bg-background/50 opacity-60"
+   432→                      : "border-primary/20 bg-[linear-gradient(130deg,oklch(0.24_0.035_82),oklch(0.19_0.02_78)_55%,oklch(0.28_0.06_85))]"
+   433→                  }`}
+   434→                >
+   435→                  <div className="flex items-center justify-between">
+   436→                    <span className="rounded-md bg-black/25 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-white/70">
+   437→                      VIRTUAL
+   438→                    </span>
+   439→                    {c.status === "frozen" && (
+   440→                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+   441→                        <Snowflake className="size-3" aria-hidden />
+   442→                        مسدود
+   443→                      </span>
+   444→                    )}
+   445→                  </div>
+   446→                  <p className="tnum mt-5 font-mono text-base tracking-[0.15em] text-white/90" dir="ltr">
+   447→                    {c.number}
+   448→                  </p>
+   449→                  <div className="mt-2 flex items-center justify-between text-[10px] text-white/50">
+   450→                    <span>کارپوشه دینار</span>
+   451→                    <span className="tnum font-mono" dir="ltr">
+   452→                      {toFa(c.expMonth, 0).padStart(2, "۰")}/{toFa(c.expYear % 100).padStart(2, "۰")}
+   453→                    </span>
+   454→                  </div>
+   455→                </motion.div>
+   456→              ))
+   457→            )}
+   458→          </div>
+   459→        </div>
+   460→      </div>
+   461→
+   462→      {/* Dialogs */}
+   463→      <CashDialog
+   464→        mode={dialog === "convert" ? null : dialog}
+   465→        busy={busy}
+   466→        wallet={w}
+   467→        onClose={() => setDialog(null)}
+   468→        onDeposit={(amt) => act("deposit", "/api/wallet/deposit", { amount: amt }, "واریز با موفقیت انجام شد")}
+   469→        onWithdraw={(amt) => act("withdraw", "/api/wallet/withdraw", { amount: amt }, "برداشت ثبت شد")}
+   470→        onIssueCard={() => act("card", "/api/wallet/card", {}, "کارت مجازی صادر شد")}
+   471→      />
+   472→      <ConvertDialog
+   473→        open={dialog === "convert"}
+   474→        busy={busy}
+   475→        prices={prices}
+   476→        wallet={w}
+   477→        onClose={() => setDialog(null)}
+   478→        onConvert={(from, to, amount) =>
+   479→          act("convert", "/api/wallet/exchange", { from, to, amount }, "تبدیل با موفقیت انجام شد")
+   480→        }
+   481→      />
+   482→    </>
+   483→  );
+   484→}
+   485→
+   486→/* ---------- Gold trade panel ---------- */
+   487→function GoldPanel({
+   488→  prices,
+   489→  wallet,
+   490→  busy,
+   491→  onTrade,
+   492→}: {
+   493→  prices: Prices;
+   494→  wallet: { irr: number; gold: number };
+   495→  busy: string | null;
+   496→  onTrade: (action: "buy" | "sell", grams: number) => void;
+   497→}) {
+   498→  const [side, setSide] = useState<"buy" | "sell">("buy");
+   499→  const [grams, setGrams] = useState("0.5");
+   500→  const g = parseNum(grams);
+   501→  const total = g * prices.gold;
+   502→  const valid =
+   503→    g > 0 &&
+   504→    (side === "buy"
+   505→      ? total <= wallet.irr
+   506→      : g <= wallet.gold);
+   507→
+   508→  return (
+   509→    <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
+   510→      <div className="flex items-center justify-between">
+   511→        <p className="font-extrabold tracking-tight">معامله طلا</p>
+   512→        <span className="text-[10px] text-muted-foreground">کارمزد ۰٫۶٪ شفاف</span>
+   513→      </div>
+   514→
+   515→      <Tabs value={side} onValueChange={(v) => setSide(v as "buy" | "sell")} className="mt-4">
+   516→        <TabsList className="grid h-12 w-full grid-cols-2 rounded-xl bg-background/60">
+   517→          <TabsTrigger value="buy" className="rounded-lg font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+   518→            خرید
+   519→          </TabsTrigger>
+   520→          <TabsTrigger value="sell" className="rounded-lg font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+   521→            فروش
+   522→          </TabsTrigger>
+   523→        </TabsList>
+   524→      </Tabs>
+   525→
+   526→      <div className="mt-4 grid gap-3">
+   527→        <div className="grid gap-2">
+   528→          <Label htmlFor="gold-grams">مقدار (گرم)</Label>
+   529→          <Input
+   530→            id="gold-grams"
+   531→            dir="ltr"
+   532→            inputMode="decimal"
+   533→            className="h-12 rounded-xl bg-background/60 text-left font-mono tnum"
+   534→            value={grams}
+   535→            onChange={(e) => setGrams(e.target.value)}
+   536→          />
+   537→        </div>
+   538→        <div className="flex gap-2">
+   539→          {["0.1", "0.5", "1", "2.5"].map((v) => (
+   540→            <button
+   541→              key={v}
+   542→              onClick={() => setGrams(v)}
+   543→              className="tnum h-11 flex-1 rounded-lg border border-border bg-background/40 font-mono text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+   544→            >
+   545→              {toFa(parseNum(v), 1)}
+   546→            </button>
+   547→          ))}
+   548→        </div>
+   549→
+   550→        <div className="rounded-2xl border border-border bg-background/40 p-4">
+   551→          <div className="flex items-center justify-between text-xs text-muted-foreground">
+   552→            <span>مبلغ کل</span>
+   553→            <span className="tnum font-mono text-sm font-bold text-foreground" dir="ltr">
+   554→              {toFa(Math.round(total))} تومان
+   555→            </span>
+   556→          </div>
+   557→          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+   558→            <span>موجودی قابل استفاده</span>
+   559→            <span className="tnum font-mono" dir="ltr">
+   560→              {side === "buy"
+   561→                ? `${toFa(Math.round(wallet.irr))} تومان`
+   562→                : `${toFa(wallet.gold, 3)} گرم`}
+   563→            </span>
+   564→          </div>
+   565→        </div>
+   566→
+   567→        <Button
+   568→          disabled={!valid || busy === `gold-${side}`}
+   569→          onClick={() => onTrade(side, g)}
+   570→          className="h-12 rounded-2xl text-sm font-bold active:scale-[0.98]"
+   571→        >
+   572→          {busy === `gold-${side}` ? (
+   573→            <Loader2 className="size-4 animate-spin" aria-hidden />
+   574→          ) : side === "buy" ? (
+   575→            "خرید طلا"
+   576→          ) : (
+   577→            "فروش طلا"
+   578→          )}
+   579→        </Button>
+   580→        {!valid && g > 0 && (
+   581→          <p className="text-center text-[11px] text-destructive">
+   582→            {side === "buy" ? "موجودی تومانی کافی نیست." : "طلای کافی ندارید."}
+   583→          </p>
+   584→        )}
+   585→      </div>
+   586→    </div>
+   587→  );
+   588→}
+   589→
+   590→/* ---------- Deposit / Withdraw / Card dialog ---------- */
+   591→function CashDialog({
+   592→  mode,
+   593→  busy,
+   594→  wallet,
+   595→  onClose,
+   596→  onDeposit,
+   597→  onWithdraw,
+   598→  onIssueCard,
+   599→}: {
+   600→  mode: null | "deposit" | "withdraw" | "card";
+   601→  busy: string | null;
+   602→  wallet: { irr: number };
+   603→  onClose: () => void;
+   604→  onDeposit: (amount: number) => void;
+   605→  onWithdraw: (amount: number) => void;
+   606→  onIssueCard: () => void;
+   607→}) {
+   608→  const open = mode !== null;
+   609→  return (
+   610→    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+   611→      <DialogContent className="max-w-md rounded-3xl border-border bg-card p-6 sm:rounded-3xl">
+   612→        {mode && (
+   613→          <CashForm
+   614→            key={mode}
+   615→            mode={mode}
+   616→            busy={busy}
+   617→            irr={wallet.irr}
+   618→            onClose={onClose}
+   619→            onDeposit={onDeposit}
+   620→            onWithdraw={onWithdraw}
+   621→            onIssueCard={onIssueCard}
+   622→          />
+   623→        )}
+   624→      </DialogContent>
+   625→    </Dialog>
+   626→  );
+   627→}
+   628→
+   629→function CashForm({
+   630→  mode,
+   631→  busy,
+   632→  irr,
+   633→  onDeposit,
+   634→  onWithdraw,
+   635→  onIssueCard,
+   636→}: {
+   637→  mode: "deposit" | "withdraw" | "card";
+   638→  busy: string | null;
+   639→  irr: number;
+   640→  onClose: () => void;
+   641→  onDeposit: (amount: number) => void;
+   642→  onWithdraw: (amount: number) => void;
+   643→  onIssueCard: () => void;
+   644→}) {
+   645→  const [amount, setAmount] = useState("");
+   646→  const amt = parseNum(amount);
+   647→  const isDeposit = mode === "deposit";
+   648→  const presets = isDeposit ? [500_000, 2_000_000, 10_000_000] : [500_000, 2_000_000];
+   649→  const valid = amt > 0 && (isDeposit || amt <= irr);
+   650→
+   651→  return (
+   652→    <>
+   653→      <DialogHeader className="text-right">
+   654→        <DialogTitle className="font-black tracking-tight">
+   655→          {mode === "card" ? "صدور کارت مجازی" : isDeposit ? "واریز به کیف پول" : "برداشت از کیف پول"}
+   656→        </DialogTitle>
+   657→        <DialogDescription>
+   658→          {mode === "card"
+   659→            ? `کارمزد صدور ${toFa(CARD_FEE)} تومان از موجودی شما کسر می‌شود.`
+   660→            : isDeposit
+   661→              ? "در نسخه دمو، واریز شبیه‌سازی درگاه پرداخت است."
+   662→              : "مبلغ باید کمتر یا مساوی موجودی قابل برداشت باشد."}
+   663→        </DialogDescription>
+   664→      </DialogHeader>
+   665→
+   666→      {mode === "card" ? (
+   667→        <Button
+   668→          disabled={busy === "card" || irr < CARD_FEE}
+   669→          onClick={onIssueCard}
+   670→          className="h-12 w-full rounded-2xl font-bold active:scale-[0.98]"
+   671→        >
+   672→          {busy === "card" ? (
+   673→            <Loader2 className="size-4 animate-spin" aria-hidden />
+   674→          ) : (
+   675→            "صدور کارت"
+   676→          )}
+   677→        </Button>
+   678→      ) : (
+   679→        <div className="grid gap-4">
+   680→          <div className="grid gap-2">
+   681→            <Label htmlFor="cash-amount">مبلغ (تومان)</Label>
+   682→            <Input
+   683→              id="cash-amount"
+   684→              dir="ltr"
+   685→              inputMode="numeric"
+   686→              className="h-12 rounded-xl bg-background/60 text-left font-mono tnum"
+   687→              value={amount}
+   688→              onChange={(e) => setAmount(e.target.value)}
+   689→              placeholder="2,000,000"
+   690→            />
+   691→          </div>
+   692→          <div className="flex gap-2">
+   693→            {presets.map((p) => (
+   694→              <button
+   695→                key={p}
+   696→                onClick={() => setAmount(String(p))}
+   697→                className="h-11 flex-1 rounded-lg border border-border bg-background/40 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+   698→              >
+   699→                {faCompact(p)} تومان
+   700→              </button>
+   701→            ))}
+   702→          </div>
+   703→          {!isDeposit && (
+   704→            <p className="tnum text-center font-mono text-[11px] text-muted-foreground" dir="ltr">
+   705→              موجودی: {toFa(Math.round(irr))} تومان
+   706→            </p>
+   707→          )}
+   708→          <Button
+   709→            disabled={!valid || !!busy}
+   710→            onClick={() => (isDeposit ? onDeposit(amt) : onWithdraw(amt))}
+   711→            className="h-12 rounded-2xl font-bold active:scale-[0.98]"
+   712→          >
+   713→            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : isDeposit ? "تأیید واریز" : "تأیید برداشت"}
+   714→          </Button>
+   715→          {!valid && amt > 0 && !isDeposit && (
+   716→            <p className="text-center text-[11px] text-destructive">موجودی کافی نیست.</p>
+   717→          )}
+   718→        </div>
+   719→      )}
+   720→    </>
+   721→  );
+   722→}
+   723→
+   724→/* ---------- Convert dialog ---------- */
+   725→function ConvertDialog({
+   726→  open,
+   727→  busy,
+   728→  prices,
+   729→  wallet,
+   730→  onClose,
+   731→  onConvert,
+   732→}: {
+   733→  open: boolean;
+   734→  busy: string | null;
+   735→  prices: Prices;
+   736→  wallet: { irr: number; usdt: number; gold: number };
+   737→  onClose: () => void;
+   738→  onConvert: (from: "IRR" | "USDT" | "GOLD", to: "IRR" | "USDT" | "GOLD", amount: number) => void;
+   739→}) {
+   740→  return (
+   741→    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+   742→      <DialogContent className="max-w-md rounded-3xl border-border bg-card p-6 sm:rounded-3xl">
+   743→        {open && (
+   744→          <ConvertForm
+   745→            key="convert"
+   746→            busy={busy}
+   747→            prices={prices}
+   748→            wallet={wallet}
+   749→            onConvert={onConvert}
+   750→          />
+   751→        )}
+   752→      </DialogContent>
+   753→    </Dialog>
+   754→  );
+   755→}
+   756→
+   757→function ConvertForm({
+   758→  busy,
+   759→  prices,
+   760→  wallet,
+   761→  onConvert,
+   762→}: {
+   763→  busy: string | null;
+   764→  prices: Prices;
+   765→  wallet: { irr: number; usdt: number; gold: number };
+   766→  onConvert: (from: "IRR" | "USDT" | "GOLD", to: "IRR" | "USDT" | "GOLD", amount: number) => void;
+   767→}) {
+   768→  const ASSETS = [
+   769→    { k: "IRR" as const, l: "تومان", max: wallet.irr, dec: 0 },
+   770→    { k: "USDT" as const, l: "تتر", max: wallet.usdt, dec: 2 },
+   771→    { k: "GOLD" as const, l: "طلا (گرم)", max: wallet.gold, dec: 3 },
+   772→  ];
+   773→  const [from, setFrom] = useState<"IRR" | "USDT" | "GOLD">("IRR");
+   774→  const [to, setTo] = useState<"IRR" | "USDT" | "GOLD">("USDT");
+   775→  const [amount, setAmount] = useState("");
+   776→
+   777→  const fromA = ASSETS.find((a) => a.k === from)!;
+   778→  const amt = parseNum(amount);
+   779→  const result = useMemo(() => (amt > 0 ? convert(amt, from, to, prices) : 0), [amt, from, to, prices]);
+   780→  const valid = amt > 0 && amt <= fromA.max && from !== to;
+   781→
+   782→  return (
+   783→    <>
+   784→      <DialogHeader className="text-right">
+   785→        <DialogTitle className="font-black tracking-tight">تبدیل دارایی</DialogTitle>
+   786→        <DialogDescription>نرخ لحظه‌ای با اسپرد شفاف ۰٫۶٪.</DialogDescription>
+   787→      </DialogHeader>
+   788→
+   789→      <div className="grid gap-3">
+   790→          <div className="rounded-2xl border border-border bg-background/40 p-4">
+   791→            <div className="flex items-center justify-between gap-3">
+   792→              <Label className="shrink-0">از</Label>
+   793→              <div className="flex flex-1 items-center gap-2">
+   794→                <Input
+   795→                  dir="ltr"
+   796→                  inputMode="decimal"
+   797→                  className="h-10 flex-1 rounded-lg bg-background/60 text-left font-mono tnum"
+   798→                  value={amount}
+   799→                  onChange={(e) => setAmount(e.target.value)}
+   800→                  placeholder="0"
+   801→                />
+   802→                <select
+   803→                  value={from}
+   804→                  onChange={(e) => setFrom(e.target.value as typeof from)}
+   805→                  aria-label="از دارایی"
+   806→                  className="h-10 rounded-lg border border-border bg-background/80 px-2 text-xs"
+   807→                >
+   808→                  {ASSETS.map((a) => (
+   809→                    <option key={a.k} value={a.k}>
+   810→                      {a.l}
+   811→                    </option>
+   812→                  ))}
+   813→                </select>
+   814→              </div>
+   815→            </div>
+   816→            <p className="tnum mt-2 text-left font-mono text-[10px] text-muted-foreground" dir="ltr">
+   817→              حداکثر: {toFa(fromA.max, fromA.dec)}
+   818→            </p>
+   819→          </div>
+   820→
+   821→          <button
+   822→            onClick={() => {
+   823→              const f = from;
+   824→              setFrom(to);
+   825→              setTo(f);
+   826→            }}
+   827→            aria-label="جابجایی جهت تبدیل"
+   828→            className="mx-auto grid size-9 place-items-center rounded-full border border-primary/30 bg-primary/10 text-primary transition-transform hover:rotate-180"
+   829→          >
+   830→            <ArrowLeftRight className="size-4" aria-hidden />
+   831→          </button>
+   832→
+   833→          <div className="rounded-2xl border border-primary/25 bg-primary/[0.05] p-4">
+   834→            <div className="flex items-center justify-between gap-3">
+   835→              <Label className="shrink-0 text-primary">به</Label>
+   836→              <div className="flex flex-1 items-center justify-end gap-2">
+   837→                <p className="tnum flex-1 text-left font-mono text-lg font-black" dir="ltr">
+   838→                  {result > 0 ? toFa(result, to === "IRR" ? 0 : to === "GOLD" ? 3 : 2) : "۰"}
+   839→                </p>
+   840→                <select
+   841→                  value={to}
+   842→                  onChange={(e) => setTo(e.target.value as typeof to)}
+   843→                  aria-label="به دارایی"
+   844→                  className="h-10 rounded-lg border border-border bg-background/80 px-2 text-xs"
+   845→                >
+   846→                  {ASSETS.map((a) => (
+   847→                    <option key={a.k} value={a.k}>
+   848→                      {a.l}
+   849→                    </option>
+   850→                  ))}
+   851→                </select>
+   852→              </div>
+   853→            </div>
+   854→          </div>
+   855→
+   856→          <Button
+   857→            disabled={!valid || !!busy}
+   858→            onClick={() => onConvert(from, to, amt)}
+   859→            className="h-12 rounded-2xl font-bold active:scale-[0.98]"
+   860→          >
+   861→            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "انجام تبدیل"}
+   862→          </Button>
+   863→          {!valid && amt > 0 && from === to && (
+   864→            <p className="text-center text-[11px] text-destructive">دو دارایی یکسان را انتخاب نکنید.</p>
+   865→          )}
+   866→          {!valid && amt > fromA.max && (
+   867→            <p className="text-center text-[11px] text-destructive">موجودی کافی نیست.</p>
+   868→          )}
+   869→      </div>
+   870→    </>
+   871→  );
+   872→}
+   873→

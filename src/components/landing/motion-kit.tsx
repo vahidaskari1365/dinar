@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion, useInView } from "framer-motion";
+import { NumberTicker } from "@/components/ui/number-ticker";
 
 /* ---------- Scroll reveal wrapper ---------- */
 export function Reveal({
@@ -142,6 +143,36 @@ export function CountUp({
     <span ref={ref} className={`tnum ${className}`}>
       {format(val)}
     </span>
+  );
+}
+
+/* ---------- Persian NumberTicker (fa-IR digits by default) ----------
+ * Thin wrapper over Magic UI <NumberTicker>; spring-animated, fires in view.
+ * Accepts a custom `format` for full control, otherwise renders fa-IR digits.
+ */
+export function FaNumberTicker({
+  value,
+  format,
+  className = "",
+  delay = 0,
+  decimalPlaces = 0,
+}: {
+  value: number;
+  format?: (v: number) => string;
+  className?: string;
+  delay?: number;
+  decimalPlaces?: number;
+}) {
+  const faFormat = (v: number) =>
+    v.toLocaleString("fa-IR", { maximumFractionDigits: decimalPlaces });
+  return (
+    <NumberTicker
+      value={value}
+      delay={delay}
+      decimalPlaces={decimalPlaces}
+      format={format ?? faFormat}
+      className={className}
+    />
   );
 }
 

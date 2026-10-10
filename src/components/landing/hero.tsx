@@ -8,8 +8,13 @@ import {
   useSpring,
 } from "framer-motion";
 import { ArrowDownLeft, TrendingDown, TrendingUp } from "lucide-react";
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
+import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
+import { NumberTicker } from "@/components/ui/number-ticker";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { WordRotate } from "@/components/ui/word-rotate";
 import { BankCard } from "./bank-card";
-import { CountUp, KineticWords, Magnetic } from "./motion-kit";
+import { KineticWords, Magnetic } from "./motion-kit";
 
 type Prices = {
   gold: number;
@@ -19,6 +24,14 @@ type Prices = {
 };
 
 const fa = (n: number) => n.toLocaleString("fa-IR");
+
+/** Rotating gold-accent words — module scope keeps identity stable across renders */
+const GOLD_WORDS = ["طلا بشه", "سرمایه بشه", "آرامش بشه"];
+
+const faFmt1 = (v: number) =>
+  v.toLocaleString("fa-IR", { maximumFractionDigits: 1 });
+const faFmt0 = (v: number) =>
+  v.toLocaleString("fa-IR", { maximumFractionDigits: 0 });
 
 /* ---------- live price chip (real data from /api/prices) ---------- */
 function PriceChip({
@@ -53,9 +66,7 @@ function PriceChip({
         {change !== undefined && change !== 0 ? (
           <span
             className={`tnum inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-              change > 0
-                ? "bg-[oklch(0.72_0.15_162/14%)] text-[oklch(0.72_0.15_162)]"
-                : "bg-[oklch(0.65_0.19_25/14%)] text-[oklch(0.65_0.19_25)]"
+              change > 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
             }`}
           >
             {change > 0 ? (
@@ -63,7 +74,11 @@ function PriceChip({
             ) : (
               <TrendingDown className="size-2.5" />
             )}
-            {fa(Math.abs(change))}٪
+            {/* dir=ltr + manual sign → minus/plus always leads the number (no RTL bidi flip) */}
+            <span dir="ltr" className="inline-flex tnum">
+              {change > 0 ? "+" : "−"}
+              {fa(Math.abs(change))}٪
+            </span>
           </span>
         ) : null}
       </div>
@@ -110,13 +125,13 @@ function CoinDust() {
 }
 
 const STATS = [
-  { to: 4, format: (v: number) => `${fa(Math.round(v))}٪`, label: "پاداش نگهداشت ماهانه" },
+  { to: 4, format: (v: number) => `${faFmt1(v)}٪`, label: "پاداش نگهداشت ماهانه" },
   {
     to: 0.5,
-    format: (v: number) => `${v.toLocaleString("fa-IR")} ثانیه`,
+    format: (v: number) => `${faFmt1(v)} ثانیه`,
     label: "میانگین تسویه واریز",
   },
-  { to: 3, format: (v: number) => `${fa(Math.round(v))} ارز + طلا`, label: "سبد حساب چندارزی" },
+  { to: 3, format: (v: number) => `${faFmt0(v)} ارز + طلا`, label: "سبد حساب چندارزی" },
 ];
 
 export function Hero() {
@@ -169,9 +184,19 @@ export function Hero() {
     >
       {/* ---------- cinematic backdrop ---------- */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="blueprint absolute inset-0" />
+        {/* Magic UI animated blueprint grid — gold-tinted squares, radial fade */}
+        <AnimatedGridPattern
+          width={56}
+          height={56}
+          numSquares={30}
+          maxOpacity={0.07}
+          duration={4}
+          repeatDelay={0.5}
+          className="fill-gold stroke-gold/10 [mask-image:radial-gradient(ellipse_90%_70%_at_50%_30%,black_25%,transparent_72%)] [-webkit-mask-image:radial-gradient(ellipse_90%_70%_at_50%_30%,black_25%,transparent_72%)]"
+        />
         <div className="aurora-a absolute -top-40 right-[4%] size-[42rem] rounded-full bg-[radial-gradient(circle,oklch(0.55_0.11_80/30%),transparent_62%)] blur-3xl" />
-        <div className="aurora-b absolute top-1/3 -left-48 size-[44rem] rounded-full bg-[radial-gradient(circle,oklch(0.45_0.09_168/26%),transparent_64%)] blur-3xl" />
+        {/* navy-blue blob — Midnight Sovereign (was green hue 168) */}
+        <div className="aurora-b absolute top-1/3 -left-48 size-[44rem] rounded-full bg-[radial-gradient(circle,oklch(0.5_0.12_262/30%),transparent_64%)] blur-3xl" />
         <div className="absolute bottom-[-12rem] left-1/4 h-[30rem] w-[52rem] rounded-full bg-[radial-gradient(ellipse,oklch(0.6_0.13_85/16%),transparent_68%)] blur-3xl" />
         {/* mouse spotlight */}
         <motion.div className="absolute inset-0" style={{ background: spotlight }} />
@@ -194,16 +219,24 @@ export function Hero() {
               hidden: { opacity: 0, y: 20 },
               show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 90, damping: 16 } },
             }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-xs font-medium"
           >
-            <span className="breathe size-1.5 rounded-full bg-success" />
-            فاز صفر — جذب سرمایه و اخذ مجوز در جریان است
+            <span className="breathe size-1.5 shrink-0 rounded-full bg-success" />
+            <AnimatedShinyText className="text-primary/90 dark:text-primary/90">
+              فاز صفر — جذب سرمایه و اخذ مجوز در جریان است
+            </AnimatedShinyText>
           </motion.div>
 
           <h1 className="text-[2.2rem] font-black leading-[1.16] tracking-tighter sm:text-[2.6rem] md:text-[3.6rem] md:leading-[1.1]">
             <KineticWords text="پولت نباید خواب بمونه؛" stagger={0.1} />
-            <br />
-            <KineticWords text="بذار طلا بشه" shimmerFrom={0} delay={0.35} stagger={0.12} />
+            <span className="-mt-1 flex flex-wrap items-center gap-x-3">
+              <KineticWords text="بذار" delay={0.35} stagger={0.12} />
+              <WordRotate
+                words={GOLD_WORDS}
+                duration={2600}
+                className="text-shimmer inline-flex"
+              />
+            </span>
           </h1>
 
           <motion.p
@@ -234,17 +267,24 @@ export function Hero() {
             className="mt-9 flex flex-wrap items-center gap-3"
           >
             <Magnetic>
-              <a
-                href="#demo"
-                className="glow-pulse group inline-flex h-12 items-center gap-2 rounded-2xl bg-primary px-7 text-sm font-bold text-primary-foreground transition-transform active:scale-[0.97]"
+              <ShimmerButton
+                type="button"
+                onClick={() =>
+                  document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })
+                }
+                background="linear-gradient(110deg, oklch(0.62 0.11 78), oklch(0.84 0.135 88), oklch(0.89 0.09 92))"
+                shimmerColor="oklch(0.99 0.06 95)"
+                shimmerSize="0.06em"
+                borderRadius="1rem"
+                className="glow-pulse h-12 min-h-12 gap-2 rounded-2xl px-7 text-sm font-bold text-primary-foreground"
               >
                 تجربه دموی زنده
                 <ArrowDownLeft className="size-4 transition-transform group-hover:-translate-x-0.5 group-hover:translate-y-0.5" />
-              </a>
+              </ShimmerButton>
             </Magnetic>
             <a
               href="#gold"
-              className="inline-flex h-12 items-center rounded-2xl border border-border bg-white/[0.03] px-6 text-sm font-semibold text-foreground/85 backdrop-blur transition-colors hover:border-primary/30 hover:bg-white/[0.07]"
+              className="inline-flex h-12 items-center rounded-2xl border border-white/[0.12] bg-white/[0.07] px-6 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-primary/30 hover:bg-white/[0.12]"
             >
               خزانه طلا
             </a>
@@ -260,15 +300,15 @@ export function Hero() {
                 transition: { type: "spring", stiffness: 80, damping: 18, delay: 0.74 },
               },
             }}
-            className="mt-10 grid grid-cols-3 gap-3 border-t border-border pt-6 sm:gap-4"
+            className="mt-10 grid grid-cols-3 gap-2.5 border-t border-border pt-6 sm:gap-4"
           >
             {STATS.map((s) => (
-              <div key={s.label}>
+              <div key={s.label} className="min-w-0">
                 <dt className="order-2 mt-1 text-[11px] leading-snug text-muted-foreground md:text-xs">
                   {s.label}
                 </dt>
                 <dd className="order-1 text-lg font-extrabold text-foreground md:text-xl">
-                  <CountUp to={s.to} format={s.format} />
+                  <NumberTicker value={s.to} format={s.format} className="tnum text-foreground dark:text-foreground" />
                 </dd>
               </div>
             ))}

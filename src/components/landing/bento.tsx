@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  motion,
-  AnimatePresence,
-  useInView,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { AnimatePresence, motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -18,29 +11,86 @@ import {
   CreditCard,
   Landmark,
   ShieldCheck,
+  TrendingUp,
   Wallet2,
 } from "lucide-react";
 import { toFa } from "@/lib/format";
+import { BlurFade } from "@/components/ui/blur-fade";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { DotPattern } from "@/components/ui/dot-pattern";
+import { MagicCard } from "@/components/ui/magic-card";
+
+/* ---------- fa-IR number ticker (local wrapper, Persian digits) ---------- */
+function NumberTickerFa({
+  value,
+  decimals = 0,
+  delay = 0,
+  className = "",
+}: {
+  value: number;
+  decimals?: number;
+  delay?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const mv = useMotionValue(0);
+  const spring = useSpring(mv, { damping: 60, stiffness: 100 });
+  const inView = useInView(ref, { once: true, margin: "0px" });
+
+  useEffect(() => {
+    if (!inView) return;
+    const t = setTimeout(() => mv.set(value), delay * 1000);
+    return () => clearTimeout(t);
+  }, [inView, mv, value, delay]);
+
+  useEffect(
+    () =>
+      spring.on("change", (v) => {
+        if (ref.current) {
+          ref.current.textContent = new Intl.NumberFormat("fa-IR", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+          }).format(Number(v.toFixed(decimals)));
+        }
+      }),
+    [spring, decimals]
+  );
+
+  return (
+    <span ref={ref} className={`tnum inline-block ${className}`}>
+      {toFa(0, decimals)}
+    </span>
+  );
+}
 
 /* ---------- Section shell ---------- */
 export function FeaturesBento() {
   return (
-    <section id="features" className="relative px-4 py-20 sm:px-6 md:py-28">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-12 max-w-2xl">
-          <p className="mb-3 font-mono text-xs tracking-[0.3em] text-primary">CORE FEATURES</p>
-          <h2 className="text-3xl font-black tracking-tighter md:text-[2.6rem] md:leading-tight">
-            همه حساب‌ها، یک اپلیکیشن
-          </h2>
-          <p className="mt-4 leading-relaxed text-muted-foreground">
-            هر بلوک، یک قابلیت واقعی محصول است — دقیقاً همان چیزی که در دموی زنده
-            پایین صفحه می‌توانید امتحان کنید.
-          </p>
-        </div>
+    <section id="features" className="relative px-4 py-20 sm:px-6 md:py-28 lg:px-8">
+      {/* gold dot pattern backdrop with radial fade */}
+      <DotPattern
+        width={18}
+        height={18}
+        className="text-primary/30 opacity-25 [mask-image:radial-gradient(70%_55%_at_50%_32%,black,transparent)]"
+      />
 
-        {/* Asymmetric bento: 2fr/1fr rows */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <BentoLiveFeed className="md:col-span-2" />
+      <div className="relative mx-auto max-w-6xl">
+        <BlurFade inView inViewMargin="-80px" className="mb-12 max-w-2xl">
+          <div>
+            <p className="mb-3 font-mono text-xs tracking-[0.3em] text-primary">CORE FEATURES</p>
+            <h2 className="text-3xl font-black tracking-tighter md:text-[2.6rem] md:leading-tight">
+              همه حساب‌ها، یک اپلیکیشن
+            </h2>
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              هر بلوک، یک قابلیت واقعی محصول است — دقیقاً همان چیزی که در دموی زنده
+              پایین صفحه می‌توانید امتحان کنید.
+            </p>
+          </div>
+        </BlurFade>
+
+        {/* Asymmetric bento: 1 → 2 → 3 cols */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <BentoLiveFeed className="sm:col-span-2" />
           <BentoProfit />
           <BentoGold />
           <BentoMultiAsset />
@@ -48,80 +98,82 @@ export function FeaturesBento() {
         </div>
 
         {/* Compliance strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ type: "spring", stiffness: 70, damping: 18 }}
-          className="glass mt-4 flex flex-col items-start gap-4 rounded-3xl p-6 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex items-center gap-4">
-            <span className="grid size-12 place-items-center rounded-2xl bg-success/10 text-[oklch(0.72_0.15_162)]">
-              <ShieldCheck className="size-6" aria-hidden />
-            </span>
-            <div>
-              <p className="font-bold">احراز هویت و ضد‌پول‌شویی از روز اول</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                KYC سه‌سطحی، تطبیق با FATF و گزارش‌دهی خودکار به نهاد ناظر.
-              </p>
+        <BlurFade delay={0.15} inView inViewMargin="-60px" className="mt-4">
+          <div className="glass flex flex-col items-start gap-4 rounded-3xl p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              {/* gold — emerald (text-success) is reserved for positive numbers/status only */}
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <ShieldCheck className="size-6" aria-hidden />
+              </span>
+              <div>
+                <p className="font-bold">احراز هویت و ضد‌پول‌شویی از روز اول</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  KYC سه‌سطحی، تطبیق با FATF و گزارش‌دهی خودکار به نهاد ناظر.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {["KYC", "AML/CFT", "FATF"].map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 py-1.5 font-mono text-[11px] tracking-wider text-muted-foreground"
+                >
+                  {t}
+                </span>
+              ))}
             </div>
           </div>
-          <div className="flex gap-2">
-            {["KYC", "AML/CFT", "FATF"].map((t) => (
-              <span
-                key={t}
-                className="rounded-lg border border-border px-3 py-1.5 font-mono text-[11px] tracking-wider text-muted-foreground"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        </motion.div>
+        </BlurFade>
       </div>
     </section>
   );
 }
 
-/* ---------- Card shell (cursor-tracked spotlight) ---------- */
-function Tile({
+/* ---------- Card shell (MagicCard: cursor-tracked gold spotlight + gradient border) ---------- */
+function Card({
   children,
   className = "",
   delay = 0,
+  premium = false,
 }: {
   children: React.ReactNode;
   className?: string;
   delay?: number;
+  premium?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  function onMove(e: React.MouseEvent) {
-    const el = ref.current;
-    const rect = el?.getBoundingClientRect();
-    if (!el || !rect) return;
-    el.style.setProperty("--spot-x", `${((e.clientX - rect.left) / rect.width) * 100}%`);
-    el.style.setProperty("--spot-y", `${((e.clientY - rect.top) / rect.height) * 100}%`);
-  }
-
   return (
-    <motion.div
-      ref={ref}
-      onMouseMove={onMove}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ type: "spring", stiffness: 75, damping: 18, delay }}
-      className={`spot group relative overflow-hidden rounded-3xl border border-border bg-surface p-7 transition-colors hover:border-primary/25 ${className}`}
-    >
-      <div className="pointer-events-none absolute -left-20 -top-20 size-48 rounded-full bg-[radial-gradient(circle,oklch(0.8_0.135_85/7%),transparent_70%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-      {children}
-    </motion.div>
+    <BlurFade delay={delay} inView inViewMargin="-60px" className={`min-w-0 ${className}`}>
+      <MagicCard
+        className="grid h-full rounded-3xl before:absolute before:inset-px before:z-[25] before:rounded-[inherit] before:bg-surface"
+        gradientFrom="#e8c877"
+        gradientTo="#39415f"
+        gradientColor="rgba(232,200,119,0.12)"
+        gradientSize={320}
+      >
+        <div className="relative z-40 flex h-full flex-col p-5 sm:p-6">{children}</div>
+        {premium && (
+          <>
+            <BorderBeam size={180} duration={12} colorFrom="#e8c877" colorTo="#6f8fd9" className="rounded-3xl" />
+            <BorderBeam
+              size={180}
+              duration={12}
+              delay={6}
+              reverse
+              colorFrom="#6f8fd9"
+              colorTo="#e8c877"
+              className="rounded-3xl"
+            />
+          </>
+        )}
+      </MagicCard>
+    </BlurFade>
   );
 }
 
 function TileHead({ icon: Icon, title, desc }: { icon: React.ElementType; title: string; desc: string }) {
   return (
     <div>
-      <div className="mb-5 grid size-11 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+      <div className="mb-5 grid size-11 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-[background-color,border-color,box-shadow] duration-300 group-hover:border-primary/40 group-hover:bg-primary/15 group-hover:shadow-[0_0_24px_-4px_oklch(0.84_0.135_88/50%)]">
         <Icon className="size-5" aria-hidden />
       </div>
       <h3 className="text-lg font-extrabold tracking-tight">{title}</h3>
@@ -144,7 +196,7 @@ type FeedItem = { id: number; name: string; type: string; amount: number; asset:
 function feedMeta(type: string) {
   switch (type) {
     case "deposit":
-      return { icon: ArrowDownToLine, tone: "text-[oklch(0.72_0.15_162)] bg-[oklch(0.72_0.15_162/12%)]", verb: "واریز" };
+      return { icon: ArrowDownToLine, tone: "text-success bg-success/10", verb: "واریز" };
     case "withdraw":
       return { icon: ArrowUpFromLine, tone: "text-foreground/70 bg-white/5", verb: "برداشت" };
     case "gold":
@@ -180,15 +232,15 @@ function BentoLiveFeed({ className = "" }: { className?: string }) {
   }, []);
 
   return (
-    <Tile className={className} delay={0}>
+    <Card className={className} delay={0}>
       <div className="flex h-full flex-col justify-between gap-6">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-3">
           <TileHead
             icon={Wallet2}
             title="واریز و برداشت لحظه‌ای"
             desc="اتصال به درگاه پرداخت در فاز اول؛ تسویه‌های بین‌بانکی زیر ثانیه در فازهای بعد."
           />
-          <span className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[10px] text-muted-foreground">
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[10px] text-muted-foreground">
             <span className="breathe size-1.5 rounded-full bg-success" />
             زنده
           </span>
@@ -205,18 +257,18 @@ function BentoLiveFeed({ className = "" }: { className?: string }) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 220, damping: 26 }}
-                  className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/40 px-4 py-3"
+                  className="flex items-center justify-between gap-2 rounded-2xl border border-border/70 bg-background/40 px-4 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className={`grid size-9 place-items-center rounded-xl ${meta.tone}`}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className={`grid size-9 shrink-0 place-items-center rounded-xl ${meta.tone}`}>
                       <meta.icon className="size-4" aria-hidden />
                     </span>
-                    <div>
-                      <p className="text-sm font-semibold leading-none">{it.name}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold leading-none">{it.name}</p>
                       <p className="mt-1.5 text-[11px] text-muted-foreground">{meta.verb}</p>
                     </div>
                   </div>
-                  <p className="tnum font-mono text-sm font-bold text-foreground/90" dir="ltr">
+                  <p className="tnum shrink-0 font-mono text-sm font-bold text-foreground/90" dir="ltr">
                     {toFa(it.amount)} <span className="text-[10px] font-normal text-muted-foreground">{it.asset}</span>
                   </p>
                 </motion.li>
@@ -225,36 +277,27 @@ function BentoLiveFeed({ className = "" }: { className?: string }) {
           </AnimatePresence>
         </ul>
       </div>
-    </Tile>
+    </Card>
   );
 }
 
-/* ---------- 2. 4% monthly profit (counting meter) ---------- */
+/* ---------- 2. 4% monthly reward (premium — gold border beam) ---------- */
 function BentoProfit() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  const mv = useMotionValue(0);
-  const spring = useSpring(mv, { stiffness: 40, damping: 16 });
-  const display = useTransform(spring, (v) => toFa(v, 1) + "٪");
-
-  useEffect(() => {
-    if (inView) mv.set(4.2);
-  }, [inView, mv]);
-
   const months = useMemo(() => [1, 3, 6, 12], []);
 
   return (
-    <Tile delay={0.05}>
-      <div ref={ref} className="flex h-full flex-col justify-between gap-6">
+    <Card delay={0.05} premium>
+      <div className="flex h-full flex-col justify-between gap-6">
         <TileHead
-          icon={TrendingUpIcon}
+          icon={TrendingUp}
           title="پاداش نگهداشت ماهانه"
           desc="موجودی نشسته در دینار، هر ماه اول ماه به‌صورت خودکار پاداش می‌گیرد."
         />
         <div>
-          <motion.p className="tnum font-mono text-4xl font-black text-primary" dir="ltr">
-            {display}
-          </motion.p>
+          <p className="tnum font-mono text-4xl font-black text-primary" dir="ltr">
+            <NumberTickerFa value={4.2} decimals={1} />
+            ٪
+          </p>
           <div className="mt-5 grid grid-cols-4 gap-1.5" aria-label="رشد تجمعی">
             {months.map((m, i) => (
               <div key={m} className="rounded-xl border border-border/70 bg-background/40 p-2 text-center">
@@ -276,17 +319,11 @@ function BentoProfit() {
           </div>
         </div>
       </div>
-    </Tile>
+    </Card>
   );
 }
-const TrendingUpIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-    <polyline points="16 7 22 7 22 13" />
-  </svg>
-);
 
-/* ---------- 3. Gold (animated sparkline) ---------- */
+/* ---------- 3. Gold (animated sparkline + fa ticker price) ---------- */
 function BentoGold() {
   const path = useMemo(() => {
     // Deterministic upward walk (seeded) — SSR/client identical
@@ -308,7 +345,7 @@ function BentoGold() {
   }, []);
 
   return (
-    <Tile delay={0.1}>
+    <Card delay={0.1}>
       <div className="flex h-full flex-col justify-between gap-6">
         <TileHead
           icon={Coins}
@@ -318,17 +355,17 @@ function BentoGold() {
         <div className="rounded-2xl border border-border/70 bg-background/40 p-4">
           <div className="flex items-center justify-between">
             <p className="tnum font-mono text-lg font-black" dir="ltr">
-              ۸٬۱۵۰٬۰۰۰
+              <NumberTickerFa value={8_150_000} delay={0.2} />
             </p>
-            <span className="tnum rounded-lg bg-[oklch(0.72_0.15_162/12%)] px-2 py-1 font-mono text-[11px] font-bold text-[oklch(0.72_0.15_162)]">
+            <span className="tnum rounded-lg bg-success/10 px-2 py-1 font-mono text-[11px] font-bold text-success">
               ‎+۱۸٫۴٪
             </span>
           </div>
           <svg viewBox="0 0 200 44" className="mt-3 w-full" aria-hidden>
             <defs>
               <linearGradient id="goldfill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="oklch(0.8 0.135 85)" stopOpacity="0.28" />
-                <stop offset="100%" stopColor="oklch(0.8 0.135 85)" stopOpacity="0" />
+                <stop offset="0%" stopColor="#e8c877" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#e8c877" stopOpacity="0" />
               </linearGradient>
             </defs>
             <motion.path
@@ -342,7 +379,7 @@ function BentoGold() {
             <motion.path
               d={path}
               fill="none"
-              stroke="oklch(0.8 0.135 85)"
+              stroke="#e8c877"
               strokeWidth="2"
               strokeLinecap="round"
               initial={{ pathLength: 0 }}
@@ -353,7 +390,7 @@ function BentoGold() {
           </svg>
         </div>
       </div>
-    </Tile>
+    </Card>
   );
 }
 
@@ -361,11 +398,11 @@ function BentoGold() {
 function BentoMultiAsset() {
   const rows = [
     { asset: "تومان", sym: "IRR", value: "۱۰۰٪", tone: "text-foreground/85", icon: Landmark },
-    { asset: "تتر", sym: "USDT", value: "۱۰۸٬۵۰۰", tone: "text-[oklch(0.72_0.15_162)]", icon: CircleDollarSign },
+    { asset: "تتر", sym: "USDT", value: "۱۰۸٬۵۰۰", tone: "text-foreground/85", icon: CircleDollarSign },
     { asset: "دلار", sym: "USD", value: "۱۰۹٬۲۰۰", tone: "text-foreground/85", icon: CircleDollarSign },
   ];
   return (
-    <Tile delay={0.15}>
+    <Card delay={0.15}>
       <div className="flex h-full flex-col justify-between gap-6">
         <TileHead
           icon={CircleDollarSign}
@@ -380,37 +417,37 @@ function BentoMultiAsset() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.25 + i * 0.12 }}
-              className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/40 px-4 py-3"
+              className="flex items-center justify-between gap-2 rounded-2xl border border-border/70 bg-background/40 px-4 py-3"
             >
-              <div className="flex items-center gap-3">
-                <r.icon className="size-4 text-muted-foreground" aria-hidden />
-                <div>
+              <div className="flex min-w-0 items-center gap-3">
+                <r.icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <div className="min-w-0">
                   <p className="text-sm font-semibold">{r.asset}</p>
                   <p className="font-mono text-[10px] tracking-widest text-muted-foreground">{r.sym}</p>
                 </div>
               </div>
-              <p className={`tnum font-mono text-sm font-bold ${r.tone}`} dir="ltr">
+              <p className={`tnum shrink-0 font-mono text-sm font-bold ${r.tone}`} dir="ltr">
                 {r.value}
               </p>
             </motion.div>
           ))}
         </div>
       </div>
-    </Tile>
+    </Card>
   );
 }
 
-/* ---------- 5. Virtual card ---------- */
+/* ---------- 5. Virtual card (premium — gold border beam) ---------- */
 function BentoCard() {
   return (
-    <Tile delay={0.2}>
+    <Card delay={0.2} premium>
       <div className="flex h-full flex-col justify-between gap-6">
         <TileHead
           icon={CreditCard}
           title="کارت مجازی در ۶۰ ثانیه"
           desc="صدور آنی کارت خرید اینترنتی با مسدودسازی موجودی؛ فریز، شارژ و محدودسازی از خودِ اپ."
         />
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(130deg,oklch(0.23_0.035_165),oklch(0.18_0.018_162)_55%,oklch(0.27_0.055_168))] p-4">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(130deg,oklch(0.24_0.035_82),oklch(0.19_0.02_78)_55%,oklch(0.28_0.06_85))] p-4">
           <div className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-2xl" />
           <div className="flex items-center justify-between">
             <span className="grid size-8 place-items-center rounded-lg bg-primary/90 text-primary-foreground">
@@ -431,6 +468,6 @@ function BentoCard() {
           </div>
         </div>
       </div>
-    </Tile>
+    </Card>
   );
 }

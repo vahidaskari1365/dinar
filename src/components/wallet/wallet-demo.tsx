@@ -29,7 +29,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { faCompact, faDateTime, toFa, faTimeAgo } from "@/lib/format";
 import { convert, currentPrices, type Prices } from "@/lib/prices";
-import { GoldChart } from "./gold-chart";
+import { BlurFade } from "@/components/ui/blur-fade";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { GoldChart, useChartHeight } from "./gold-chart";
 
 /* ---------- types ---------- */
 type Tx = {
@@ -70,13 +72,13 @@ function parseNum(s: string): number {
 }
 
 const TX_META: Record<string, { label: string; tone: string; icon: React.ElementType }> = {
-  deposit: { label: "واریز", tone: "text-[oklch(0.72_0.15_162)] bg-[oklch(0.72_0.15_162/10%)]", icon: ArrowDownToLine },
+  deposit: { label: "واریز", tone: "text-success bg-success/10", icon: ArrowDownToLine },
   withdraw: { label: "برداشت", tone: "text-foreground/70 bg-white/5", icon: ArrowUpFromLine },
   gold_buy: { label: "خرید طلا", tone: "text-primary bg-primary/10", icon: Coins },
   gold_sell: { label: "فروش طلا", tone: "text-foreground/70 bg-white/5", icon: Coins },
   exchange: { label: "تبدیل ارز", tone: "text-foreground/70 bg-white/5", icon: ArrowLeftRight },
   card_issue: { label: "صدور کارت", tone: "text-foreground/70 bg-white/5", icon: CreditCard },
-  profit: { label: "پاداش ماهانه", tone: "text-[oklch(0.72_0.15_162)] bg-[oklch(0.72_0.15_162/10%)]", icon: TrendingUp },
+  profit: { label: "پاداش ماهانه", tone: "text-success bg-success/10", icon: TrendingUp },
 };
 
 function fmtAsset(asset: string, amount: number): string {
@@ -132,8 +134,9 @@ function usePrices(intervalMs = 4000) {
 /* ================================================================ */
 export function WalletDemo() {
   return (
-    <section id="demo" className="relative border-t border-border px-4 py-20 sm:px-6 md:py-28">
+    <section id="demo" className="relative border-t border-border px-4 py-20 sm:px-6 md:py-28 lg:px-8">
       <div className="mx-auto max-w-6xl">
+        <BlurFade inView inViewMargin="-80px">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
             <p className="mb-3 font-mono text-xs tracking-[0.3em] text-primary">LIVE DEMO</p>
@@ -151,6 +154,7 @@ export function WalletDemo() {
             موتور قیمت فعال
           </span>
         </div>
+        </BlurFade>
 
         <Dashboard />
       </div>
@@ -162,6 +166,7 @@ export function WalletDemo() {
 function Dashboard() {
   const { data, loading, refresh } = useWallet();
   const { prices, hist } = usePrices();
+  const chartH = useChartHeight();
   const { toast } = useToast();
   const [busy, setBusy] = useState<string | null>(null);
   const [dialog, setDialog] = useState<null | "deposit" | "withdraw" | "convert" | "card">(null);
@@ -213,16 +218,17 @@ function Dashboard() {
         {/* Main IRR */}
         <motion.div
           layout
-          className="relative min-w-0 overflow-hidden rounded-3xl border border-primary/25 bg-[linear-gradient(140deg,oklch(0.19_0.03_165),oklch(0.15_0.016_162)_60%,oklch(0.23_0.045_168))] p-6 md:col-span-2"
+          className="relative min-w-0 overflow-hidden rounded-3xl border border-primary/25 bg-[linear-gradient(140deg,oklch(0.20_0.035_262),oklch(0.155_0.018_265)_60%,oklch(0.24_0.05_88))] p-6 md:col-span-2"
         >
           <div className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" />
+          <BorderBeam size={180} duration={12} colorFrom="#e8c877" colorTo="#6f8fd9" className="rounded-3xl" />
           <div className="flex items-start justify-between gap-3 max-sm:flex-col-reverse">
             <div>
               <p className="flex items-center gap-2 text-xs text-foreground/60">
                 <Wallet2 className="size-3.5" aria-hidden />
                 موجودی تومانی
               </p>
-              <p className="tnum mt-3 font-mono text-3xl font-black tracking-tight text-foreground sm:text-4xl md:text-5xl" dir="ltr">
+              <p className="tnum text-shimmer mt-3 font-mono text-3xl font-black tracking-tight sm:text-4xl md:text-5xl" dir="ltr">
                 {toFa(Math.round(w.irr))}
                 <span className="mr-2 text-sm font-medium text-foreground/50">تومان</span>
               </p>
@@ -235,19 +241,19 @@ function Dashboard() {
             </span>
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
-            <Button size="sm" className="rounded-xl font-bold active:scale-[0.98]" onClick={() => setDialog("deposit")}>
+            <Button className="h-11 rounded-xl px-4 font-bold active:scale-[0.98]" onClick={() => setDialog("deposit")}>
               <Plus className="size-4" aria-hidden />
               واریز
             </Button>
-            <Button size="sm" variant="secondary" className="rounded-xl active:scale-[0.98]" onClick={() => setDialog("withdraw")}>
+            <Button variant="secondary" className="h-11 rounded-xl px-4 active:scale-[0.98]" onClick={() => setDialog("withdraw")}>
               <ArrowUpFromLine className="size-4" aria-hidden />
               برداشت
             </Button>
-            <Button size="sm" variant="secondary" className="rounded-xl active:scale-[0.98]" onClick={() => setDialog("convert")}>
+            <Button variant="secondary" className="h-11 rounded-xl px-4 active:scale-[0.98]" onClick={() => setDialog("convert")}>
               <ArrowLeftRight className="size-4" aria-hidden />
               تبدیل
             </Button>
-            <Button size="sm" variant="ghost" className="rounded-xl border border-border active:scale-[0.98]" onClick={() => setDialog("card")}>
+            <Button variant="ghost" className="h-11 rounded-xl border border-border px-4 active:scale-[0.98]" onClick={() => setDialog("card")}>
               <CreditCard className="size-4" aria-hidden />
               کارت جدید
             </Button>
@@ -259,7 +265,7 @@ function Dashboard() {
           <motion.div layout className="rounded-3xl border border-border bg-surface p-6">
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">موجودی تتر</p>
-              <span className="grid size-8 place-items-center rounded-lg bg-[oklch(0.72_0.15_162/12%)] text-[oklch(0.72_0.15_162)]">
+              <span className="grid size-8 place-items-center rounded-lg bg-foreground/[0.06] text-foreground/70">
                 <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden>
                   <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 8.9v1.7h-3.7v1.2h3.7v1.7h-3.7v2.6h-1.8v-2.6H7.4v-1.7h3.7v-1.2H7.4v-1.7h6.6l-1.4-1.4 1.2-1.2 3 3-3 3-1.2-1.2 1.3-1.4h-.7Z" />
                 </svg>
@@ -319,7 +325,7 @@ function Dashboard() {
             </div>
           </div>
           <div className="mt-5">
-            <GoldChart data={hist} />
+            <GoldChart data={hist} height={chartH} />
           </div>
         </div>
 
@@ -346,13 +352,13 @@ function Dashboard() {
             <p className="font-extrabold tracking-tight">گردش حساب</p>
             <button
               onClick={refresh}
-              className="grid size-8 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
+              className="grid size-11 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
               aria-label="به‌روزرسانی"
             >
               <RefreshCw className="size-3.5" aria-hidden />
             </button>
           </div>
-          <div className="mt-4 max-h-96 space-y-2 overflow-y-auto pl-1 [scrollbar-width:thin]">
+          <div className="mt-4 max-h-96 space-y-2 overflow-y-auto pb-2 pl-1 [scrollbar-width:thin]">
             {data.transactions.length === 0 ? (
               <div className="grid place-items-center rounded-2xl border border-dashed border-border py-12 text-center">
                 <Wallet2 className="size-8 text-muted-foreground/40" aria-hidden />
@@ -399,12 +405,12 @@ function Dashboard() {
         <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
           <div className="flex items-center justify-between">
             <p className="font-extrabold tracking-tight">کارت‌های من</p>
-            <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("card")}>
+            <Button variant="outline" className="h-11 rounded-xl px-4" onClick={() => setDialog("card")}>
               <Plus className="size-4" aria-hidden />
               صدور کارت
             </Button>
           </div>
-          <div className="mt-4 max-h-96 space-y-3 overflow-y-auto [scrollbar-width:thin]">
+          <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pb-2 [scrollbar-width:thin]">
             {data.cards.length === 0 ? (
               <div className="grid place-items-center rounded-2xl border border-dashed border-border py-12 text-center">
                 <CreditCard className="size-8 text-muted-foreground/40" aria-hidden />
@@ -507,7 +513,7 @@ function GoldPanel({
       </div>
 
       <Tabs value={side} onValueChange={(v) => setSide(v as "buy" | "sell")} className="mt-4">
-        <TabsList className="grid w-full grid-cols-2 rounded-xl bg-background/60">
+        <TabsList className="grid h-12 w-full grid-cols-2 rounded-xl bg-background/60">
           <TabsTrigger value="buy" className="rounded-lg font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             خرید
           </TabsTrigger>
@@ -534,7 +540,7 @@ function GoldPanel({
             <button
               key={v}
               onClick={() => setGrams(v)}
-              className="tnum flex-1 rounded-lg border border-border bg-background/40 py-1.5 font-mono text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              className="tnum h-11 flex-1 rounded-lg border border-border bg-background/40 font-mono text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
             >
               {toFa(parseNum(v), 1)}
             </button>
@@ -688,7 +694,7 @@ function CashForm({
               <button
                 key={p}
                 onClick={() => setAmount(String(p))}
-                className="flex-1 rounded-lg border border-border bg-background/40 py-2 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                className="h-11 flex-1 rounded-lg border border-border bg-background/40 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
               >
                 {faCompact(p)} تومان
               </button>

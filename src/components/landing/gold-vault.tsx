@@ -4,7 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion } from "framer-motion";
 import { BadgeCheck, Coins, ShieldCheck, Sparkles } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { GoldChart } from "@/components/wallet/gold-chart";
+import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
+import { BlurFade } from "@/components/ui/blur-fade";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { TypingAnimation } from "@/components/ui/typing-animation";
+import { GoldChart, useChartHeight } from "@/components/wallet/gold-chart";
 import { Reveal, SectionHeading } from "./motion-kit";
 
 const fa = (n: number) => Math.round(n).toLocaleString("fa-IR");
@@ -74,6 +78,7 @@ export function GoldVault() {
   const [history, setHistory] = useState<number[]>([]);
   const [gold, setGold] = useState(8_150_000);
   const [deposit, setDeposit] = useState(50_000_000);
+  const chartH = useChartHeight();
 
   useEffect(() => {
     let alive = true;
@@ -107,7 +112,7 @@ export function GoldVault() {
   const grams = deposit / gold;
 
   return (
-    <section id="gold" className="relative overflow-hidden px-4 py-24 sm:px-6 md:py-32">
+    <section id="gold" className="relative overflow-hidden px-4 py-24 sm:px-6 md:py-32 lg:px-8">
       {/* ambient */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="aurora-b absolute -right-40 top-10 size-[36rem] rounded-full bg-[radial-gradient(circle,oklch(0.55_0.11_80/18%),transparent_65%)] blur-3xl" />
@@ -147,20 +152,31 @@ export function GoldVault() {
           {/* chart + calculator */}
           <div className="order-1 space-y-6 lg:order-2">
             <Reveal>
-              <div className="glass rounded-3xl p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-sm font-bold">
-                    <Coins className="size-4 text-primary" />
-                    نمودار زنده طلا
-                  </h3>
-                  <span className="tnum rounded-full bg-[oklch(0.72_0.15_162/12%)] px-2.5 py-1 font-mono text-[11px] font-bold text-[oklch(0.72_0.15_162)]" dir="ltr">
+              <div className="glass relative overflow-hidden rounded-3xl p-5">
+                <BorderBeam size={180} duration={12} colorFrom="#e8c877" colorTo="#6f8fd9" className="rounded-3xl" />
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="h-4">
+                      <TypingAnimation
+                        className="font-mono text-[10px] leading-4 tracking-[0.25em] text-primary/70"
+                        duration={70}
+                      >
+                        خزانه طلای زنده
+                      </TypingAnimation>
+                    </div>
+                    <h3 className="mt-1 flex items-center gap-2 text-sm font-bold">
+                      <Coins className="size-4 text-primary" />
+                      نمودار زنده طلا
+                    </h3>
+                  </div>
+                  <span className="tnum shrink-0 rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[11px] font-bold text-primary" dir="ltr">
                     {fa(gold)} ت
                   </span>
                 </div>
                 {history.length > 1 ? (
-                  <GoldChart data={history} height={140} />
+                  <GoldChart data={history} height={chartH} />
                 ) : (
-                  <div className="h-[140px] animate-pulse rounded-xl bg-white/[0.04]" />
+                  <div className="h-56 animate-pulse rounded-xl bg-white/[0.04] sm:h-64 lg:h-72" />
                 )}
                 <p className="mt-2 text-[10px] text-muted-foreground/70">
                   بازه ۴۸ دقیقه — به‌روزرسانی هر ۵ ثانیه · قیمت‌ها شبیه‌سازی دموی امن هستند
@@ -197,26 +213,58 @@ export function GoldVault() {
                   </div>
                 </div>
 
-                <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
-                  <div className="rounded-2xl border border-border bg-white/[0.03] p-3">
-                    <dt className="text-[10px] text-muted-foreground">پاداش ماه اول</dt>
-                    <dd className="tnum mt-1 font-mono text-sm font-black text-[oklch(0.72_0.15_162)]">
-                      +<LiveNum value={monthly} />
-                    </dd>
+                <BlurFade delay={0.1} inView>
+                  <dl className="mt-6 grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
+                    <div className="rounded-2xl border border-border bg-white/[0.03] p-3">
+                      <dt className="text-[10px] text-muted-foreground">پاداش ماه اول</dt>
+                      <dd className="tnum mt-1 font-mono text-sm font-black text-success">
+                        +<LiveNum value={monthly} />
+                      </dd>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-white/[0.03] p-3">
+                      <dt className="text-[10px] text-muted-foreground">تا پایان سال</dt>
+                      <dd className="tnum mt-1 font-mono text-sm font-black text-primary">
+                        <LiveNum value={yearEnd} />
+                      </dd>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-white/[0.03] p-3">
+                      <dt className="text-[10px] text-muted-foreground">معادل طلا</dt>
+                      <dd className="tnum mt-1 font-mono text-sm font-black">
+                        <LiveNum value={grams} format={fa2} /> <span className="text-[10px] font-normal">گرم</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </BlurFade>
+
+                {/* allocation gauge — gold on navy */}
+                <BlurFade delay={0.15} inView>
+                  <div className="mt-4 flex items-center gap-4 rounded-2xl border border-border bg-white/[0.03] p-4">
+                    <div
+                      role="img"
+                      aria-label="سهم طلا از دارایی: ۶۵ درصد"
+                      className="relative size-20 shrink-0 [&_[data-current-value]]:text-transparent"
+                    >
+                      <AnimatedCircularProgressBar
+                        value={65}
+                        gaugePrimaryColor="#e8c877"
+                        gaugeSecondaryColor="#39415f"
+                        className="size-20 text-base"
+                      />
+                      <span
+                        aria-hidden
+                        className="tnum absolute inset-0 grid place-items-center font-mono text-sm font-black text-primary"
+                      >
+                        ۶۵٪
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold">سهم طلا از دارایی</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                        ترکیب نمونه سبد در دمو — تعادل نقدینگی تومانی و طلای گرمی به‌عنوان ذخیره ارزش.
+                      </p>
+                    </div>
                   </div>
-                  <div className="rounded-2xl border border-border bg-white/[0.03] p-3">
-                    <dt className="text-[10px] text-muted-foreground">تا پایان سال</dt>
-                    <dd className="tnum mt-1 font-mono text-sm font-black text-primary">
-                      <LiveNum value={yearEnd} />
-                    </dd>
-                  </div>
-                  <div className="rounded-2xl border border-border bg-white/[0.03] p-3">
-                    <dt className="text-[10px] text-muted-foreground">معادل طلا</dt>
-                    <dd className="tnum mt-1 font-mono text-sm font-black">
-                      <LiveNum value={grams} format={fa2} /> <span className="text-[10px] font-normal">گرم</span>
-                    </dd>
-                  </div>
-                </dl>
+                </BlurFade>
 
                 <p className="mt-4 flex items-start gap-1.5 text-[10px] leading-relaxed text-muted-foreground/70">
                   <ShieldCheck className="mt-0.5 size-3 shrink-0" />

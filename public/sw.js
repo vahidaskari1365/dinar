@@ -4,7 +4,7 @@
  * - Pages & data: network-first with cache fallback (fresh prices, works offline)
  * - API: network-only (financial data must never be served stale)
  */
-const VERSION = "dinar-v2";
+const VERSION = "dinar-v3";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const PRECACHE = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];

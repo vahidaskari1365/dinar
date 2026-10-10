@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { DotPattern } from "@/components/ui/dot-pattern";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { useToast } from "@/hooks/use-toast";
 
 const TOPICS = [
@@ -22,6 +25,10 @@ const TOPICS = [
   { v: "investment", l: "مشارکت سرمایه‌گذاری در فاز صفر" },
   { v: "other", l: "سایر" },
 ];
+
+/** Shared gold input styling — h-12 touch-friendly, navy surface, gold focus ring */
+const FIELD =
+  "h-12 rounded-xl border-input bg-surface-2 text-base focus-visible:border-primary/50 focus-visible:ring-primary/25 md:text-sm";
 
 export function Consultation() {
   const { toast } = useToast();
@@ -65,8 +72,19 @@ export function Consultation() {
   }
 
   return (
-    <section id="consult" className="relative border-t border-border px-4 py-20 sm:px-6 md:py-28">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
+    <section
+      id="consult"
+      className="relative overflow-hidden border-t border-border px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+    >
+      {/* subtle gold dot backdrop — the only decoration on this section */}
+      <DotPattern
+        width={24}
+        height={24}
+        cr={1.1}
+        className="text-gold/25 [mask-image:radial-gradient(ellipse_65%_55%_at_50%_45%,black_10%,transparent_75%)]"
+      />
+
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
         {/* Pitch */}
         <div>
           <p className="mb-3 font-mono text-xs tracking-[0.3em] text-primary">TALK TO US</p>
@@ -91,26 +109,34 @@ export function Consultation() {
                 </span>
                 <div>
                   <p className="text-sm font-bold">{r.t}</p>
-                  <p className="text-xs text-muted-foreground">{r.d}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{r.d}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Form */}
+        {/* Form — gold beam patrols the card border */}
         <motion.form
           onSubmit={submit}
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ type: "spring", stiffness: 75, damping: 18 }}
-          className="rounded-3xl border border-border bg-surface p-6 md:p-8"
+          className="relative overflow-hidden rounded-3xl border border-border bg-surface p-5 sm:p-6 md:p-8"
           noValidate
         >
+          <BorderBeam
+            size={70}
+            duration={8}
+            colorFrom="#a97f3a"
+            colorTo="#ecd9a8"
+            borderWidth={1.5}
+          />
+
           {done ? (
             <div className="flex min-h-80 flex-col items-center justify-center text-center">
-              <span className="grid size-16 place-items-center rounded-full bg-success/15 text-[oklch(0.72_0.15_162)]">
+              <span className="grid size-16 place-items-center rounded-full bg-success/15 text-success ring-1 ring-success/30">
                 <Send className="size-7" aria-hidden />
               </span>
               <h3 className="mt-5 text-xl font-black">درخواست شما ثبت شد</h3>
@@ -123,64 +149,64 @@ export function Consultation() {
             <div className="grid gap-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label htmlFor="c-name">نام و نام خانوادگی *</Label>
+                  <Label htmlFor="c-name" className="text-sm">نام و نام خانوادگی *</Label>
                   <Input
                     id="c-name"
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="مثلاً آرمین صفوی"
-                    className="h-11 rounded-xl bg-background/60"
+                    className={FIELD}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="c-phone">شماره تماس *</Label>
+                  <Label htmlFor="c-phone" className="text-sm">شماره تماس *</Label>
                   <Input
                     id="c-phone"
                     required
                     inputMode="tel"
                     dir="ltr"
-                    className="h-11 rounded-xl bg-background/60 text-right"
+                    className={`${FIELD} text-right`}
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="0912 847 1928"
+                    placeholder="۰۹۱۲ ۸۴۷ ۱۹۲۸"
                   />
                 </div>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label htmlFor="c-email">ایمیل</Label>
+                  <Label htmlFor="c-email" className="text-sm">ایمیل</Label>
                   <Input
                     id="c-email"
                     type="email"
                     dir="ltr"
-                    className="h-11 rounded-xl bg-background/60 text-right"
+                    className={`${FIELD} text-right`}
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="you@company.com"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="c-company">نام سازمان</Label>
+                  <Label htmlFor="c-company" className="text-sm">نام سازمان</Label>
                   <Input
                     id="c-company"
                     value={form.company}
                     onChange={(e) => setForm({ ...form, company: e.target.value })}
                     placeholder="اختیاری"
-                    className="h-11 rounded-xl bg-background/60"
+                    className={FIELD}
                   />
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <Label>موضوع مشاوره *</Label>
+                <Label className="text-sm">موضوع مشاوره *</Label>
                 <Select
                   value={form.topic}
                   onValueChange={(v) => setForm({ ...form, topic: v })}
                   required
                 >
-                  <SelectTrigger className="h-11 w-full rounded-xl bg-background/60">
+                  <SelectTrigger className={`w-full ${FIELD}`}>
                     <SelectValue placeholder="یک موضوع را انتخاب کنید" />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,21 +220,24 @@ export function Consultation() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="c-msg">توضیح پروژه</Label>
+                <Label htmlFor="c-msg" className="text-sm">توضیح پروژه</Label>
                 <Textarea
                   id="c-msg"
-                  rows={4}
+                  rows={3}
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="در چند خط بگویید در چه مرحله‌ای هستید و دنبال چه چیزی هستید…"
-                  className="resize-none rounded-xl bg-background/60"
+                  className="min-h-28 resize-none rounded-xl border-input bg-surface-2 text-base focus-visible:border-primary/50 focus-visible:ring-primary/25 sm:min-h-36 md:text-sm"
                 />
               </div>
 
-              <button
+              <ShimmerButton
                 type="submit"
                 disabled={sending}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_14px_30px_-12px_oklch(0.8_0.135_85/55%)] transition-transform active:scale-[0.98] disabled:opacity-60"
+                background="linear-gradient(135deg, oklch(0.78 0.13 84), oklch(0.88 0.11 92))"
+                shimmerColor="#fff7e0"
+                borderRadius="1rem"
+                className="min-h-12 w-full text-sm font-black text-[oklch(0.16_0.04_85)] shadow-[0_14px_30px_-12px_oklch(0.84_0.135_88/55%)] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {sending ? (
                   <>
@@ -221,7 +250,7 @@ export function Consultation() {
                     <Send className="size-4 -scale-x-100" aria-hidden />
                   </>
                 )}
-              </button>
+              </ShimmerButton>
               <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
                 اطلاعات شما محرمانه است و صرفاً برای هماهنگی جلسه استفاده می‌شود.
               </p>

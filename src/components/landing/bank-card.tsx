@@ -8,9 +8,11 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 /**
- * Premium 3D bank card — mouse-tracked tilt physics + holographic foil glare.
+ * Premium 3D bank card — Midnight Sovereign navy face, champagne-gold details,
+ * mouse-tracked tilt physics + holographic foil glare + Magic UI BorderBeam.
  * Motion values kept outside React render cycle (taste-skill rule).
  */
 export function BankCard({ className = "" }: { className?: string }) {
@@ -43,7 +45,7 @@ export function BankCard({ className = "" }: { className?: string }) {
 
   return (
     <div
-      className={`[perspective:1500px] ${className}`}
+      className={`[perspective:1500px] mx-auto w-full max-w-[22rem] sm:max-w-[26rem] lg:max-w-[32rem] ${className}`}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
     >
@@ -52,8 +54,8 @@ export function BankCard({ className = "" }: { className?: string }) {
         style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
         className="relative aspect-[8/5] w-full select-none rounded-[1.75rem] p-6 md:p-7"
       >
-        {/* Card body — layered gold on emerald vault */}
-        <div className="absolute inset-0 rounded-[1.75rem] bg-[linear-gradient(135deg,oklch(0.26_0.035_165)_0%,oklch(0.17_0.018_162)_45%,oklch(0.24_0.05_168)_100%)]" />
+        {/* Card body — layered gold on midnight navy (Midnight Sovereign) */}
+        <div className="absolute inset-0 rounded-[1.75rem] bg-[linear-gradient(135deg,oklch(0.24_0.04_260)_0%,oklch(0.16_0.024_263)_48%,oklch(0.23_0.05_258)_100%)]" />
 
         {/* Holographic foil — subtle conic sheen */}
         <div className="absolute inset-0 rounded-[1.75rem] bg-[conic-gradient(from_210deg_at_70%_30%,transparent_0deg,oklch(0.85_0.12_88/14%)_60deg,transparent_130deg,oklch(0.8_0.1_95/10%)_220deg,transparent_300deg)]" />
@@ -69,6 +71,13 @@ export function BankCard({ className = "" }: { className?: string }) {
 
         {/* Shine sweep */}
         <div className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem]" />
+
+        {/* Magic UI BorderBeam — champagne → sapphire light sweeping the edge.
+            Lives in its own overflow-hidden layer so the 3D tilt (preserve-3d)
+            on the parent is never flattened. */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem]">
+          <BorderBeam size={220} duration={10} colorFrom="#e8c877" colorTo="#6f8fd9" borderWidth={2} />
+        </div>
 
         {/* Content */}
         <div
@@ -110,7 +119,7 @@ export function BankCard({ className = "" }: { className?: string }) {
             </div>
             <svg
               viewBox="0 0 36 24"
-              className="size-8 text-foreground/60"
+              className="size-8 text-gold-soft/50"
               fill="currentColor"
               aria-hidden
             >
@@ -122,7 +131,7 @@ export function BankCard({ className = "" }: { className?: string }) {
           <div>
             <p
               dir="ltr"
-              className="tnum text-right font-mono text-[17px] tracking-[0.14em] text-foreground/85 md:text-lg"
+              className="tnum text-right font-mono text-[17px] tracking-[0.14em] text-gold-soft md:text-lg"
             >
               6037••••••••4217
             </p>
