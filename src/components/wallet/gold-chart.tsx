@@ -47,7 +47,14 @@ export function GoldChart({ data, height = 150 }: { data: number[]; height?: num
 
   return (
     <div ref={ref} className="relative w-full">
-      <svg width={width} height={height} className="block" aria-label="نمودار قیمت طلا">
+      {/* viewBox + w-full → fully fluid: no min-content blowout inside CSS grids on mobile */}
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="block h-auto w-full"
+        aria-label="نمودار قیمت طلا"
+      >
         <defs>
           <linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="oklch(0.8 0.135 85)" stopOpacity="0.25" />
@@ -69,7 +76,7 @@ export function GoldChart({ data, height = 150 }: { data: number[]; height?: num
           cy={xy[xy.length - 1][1]}
           r="4"
           fill="oklch(0.8 0.135 85)"
-          stroke="oklch(0.145 0.006 84)"
+          stroke="oklch(0.155 0.014 168)"
           strokeWidth="2"
         />
       </svg>

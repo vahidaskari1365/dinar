@@ -5,7 +5,7 @@ import { Landmark, ShieldCheck, Globe2 } from "lucide-react";
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-white/[0.015]">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 pt-12 pb-[max(3rem,env(safe-area-inset-bottom))] sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div>

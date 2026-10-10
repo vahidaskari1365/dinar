@@ -410,7 +410,7 @@ function BentoCard() {
           title="کارت مجازی در ۶۰ ثانیه"
           desc="صدور آنی کارت خرید اینترنتی با مسدودسازی موجودی؛ فریز، شارژ و محدودسازی از خودِ اپ."
         />
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(130deg,oklch(0.24_0.035_82),oklch(0.19_0.02_78)_55%,oklch(0.28_0.06_85))] p-4">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(130deg,oklch(0.23_0.035_165),oklch(0.18_0.018_162)_55%,oklch(0.27_0.055_168))] p-4">
           <div className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-2xl" />
           <div className="flex items-center justify-between">
             <span className="grid size-8 place-items-center rounded-lg bg-primary/90 text-primary-foreground">

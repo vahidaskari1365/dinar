@@ -171,7 +171,7 @@ export function Hero() {
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="blueprint absolute inset-0" />
         <div className="aurora-a absolute -top-40 right-[4%] size-[42rem] rounded-full bg-[radial-gradient(circle,oklch(0.55_0.11_80/30%),transparent_62%)] blur-3xl" />
-        <div className="aurora-b absolute top-1/3 -left-48 size-[44rem] rounded-full bg-[radial-gradient(circle,oklch(0.42_0.08_95/24%),transparent_64%)] blur-3xl" />
+        <div className="aurora-b absolute top-1/3 -left-48 size-[44rem] rounded-full bg-[radial-gradient(circle,oklch(0.45_0.09_168/26%),transparent_64%)] blur-3xl" />
         <div className="absolute bottom-[-12rem] left-1/4 h-[30rem] w-[52rem] rounded-full bg-[radial-gradient(ellipse,oklch(0.6_0.13_85/16%),transparent_68%)] blur-3xl" />
         {/* mouse spotlight */}
         <motion.div className="absolute inset-0" style={{ background: spotlight }} />
@@ -200,7 +200,7 @@ export function Hero() {
             فاز صفر — جذب سرمایه و اخذ مجوز در جریان است
           </motion.div>
 
-          <h1 className="text-[2.6rem] font-black leading-[1.14] tracking-tighter md:text-[3.6rem] md:leading-[1.1]">
+          <h1 className="text-[2.2rem] font-black leading-[1.16] tracking-tighter sm:text-[2.6rem] md:text-[3.6rem] md:leading-[1.1]">
             <KineticWords text="پولت نباید خواب بمونه؛" stagger={0.1} />
             <br />
             <KineticWords text="بذار طلا بشه" shimmerFrom={0} delay={0.35} stagger={0.12} />
@@ -260,7 +260,7 @@ export function Hero() {
                 transition: { type: "spring", stiffness: 80, damping: 18, delay: 0.74 },
               },
             }}
-            className="mt-12 grid grid-cols-3 gap-4 border-t border-border pt-6"
+            className="mt-10 grid grid-cols-3 gap-3 border-t border-border pt-6 sm:gap-4"
           >
             {STATS.map((s) => (
               <div key={s.label}>
@@ -298,8 +298,8 @@ export function Hero() {
             <BankCard />
           </motion.div>
 
-          {/* live chips — mobile: above/below card · desktop: dark mid-zones */}
-          <div className="absolute -top-4 left-3 z-20 lg:-left-14 lg:top-24">
+          {/* live chips — desktop: floating mid-zones around the card */}
+          <div className="absolute -top-4 left-3 z-20 hidden lg:-left-14 lg:top-24 lg:block">
             <PriceChip
               label="هر گرم طلای ۱۸"
               value={prices.gold}
@@ -308,7 +308,19 @@ export function Hero() {
               delay={0.5}
             />
           </div>
-          <div className="absolute -bottom-5 right-3 z-20 lg:-right-14 lg:bottom-32">
+          <div className="absolute -bottom-5 right-3 z-20 hidden lg:-right-14 lg:bottom-32 lg:block">
+            <PriceChip label="نرخ تتر" value={prices.usdt} unit="تومان" delay={1.1} />
+          </div>
+
+          {/* live chips — mobile/tablet: tidy row under the card */}
+          <div className="relative z-20 mt-7 flex flex-wrap items-stretch justify-center gap-3 lg:hidden">
+            <PriceChip
+              label="هر گرم طلای ۱۸"
+              value={prices.gold}
+              unit="تومان"
+              change={prices.goldChange}
+              delay={0.5}
+            />
             <PriceChip label="نرخ تتر" value={prices.usdt} unit="تومان" delay={1.1} />
           </div>
 

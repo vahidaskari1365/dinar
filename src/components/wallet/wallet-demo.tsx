@@ -213,16 +213,16 @@ function Dashboard() {
         {/* Main IRR */}
         <motion.div
           layout
-          className="relative overflow-hidden rounded-3xl border border-primary/25 bg-[linear-gradient(140deg,oklch(0.2_0.03_82),oklch(0.16_0.015_78)_60%,oklch(0.24_0.05_85))] p-6 md:col-span-2"
+          className="relative min-w-0 overflow-hidden rounded-3xl border border-primary/25 bg-[linear-gradient(140deg,oklch(0.19_0.03_165),oklch(0.15_0.016_162)_60%,oklch(0.23_0.045_168))] p-6 md:col-span-2"
         >
           <div className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" />
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3 max-sm:flex-col-reverse">
             <div>
               <p className="flex items-center gap-2 text-xs text-foreground/60">
                 <Wallet2 className="size-3.5" aria-hidden />
                 موجودی تومانی
               </p>
-              <p className="tnum mt-3 font-mono text-4xl font-black tracking-tight text-foreground md:text-5xl" dir="ltr">
+              <p className="tnum mt-3 font-mono text-3xl font-black tracking-tight text-foreground sm:text-4xl md:text-5xl" dir="ltr">
                 {toFa(Math.round(w.irr))}
                 <span className="mr-2 text-sm font-medium text-foreground/50">تومان</span>
               </p>
@@ -255,7 +255,7 @@ function Dashboard() {
         </motion.div>
 
         {/* Side assets */}
-        <div className="grid gap-4">
+        <div className="grid min-w-0 gap-4">
           <motion.div layout className="rounded-3xl border border-border bg-surface p-6">
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">موجودی تتر</p>
@@ -295,7 +295,7 @@ function Dashboard() {
       {/* Market + trade */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
         {/* Gold market */}
-        <div className="rounded-3xl border border-border bg-surface p-6">
+        <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-extrabold tracking-tight">بازار طلا — هر گرم ۱۸ عیار</p>
@@ -341,7 +341,7 @@ function Dashboard() {
 
       {/* Activity + cards */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
-        <div className="rounded-3xl border border-border bg-surface p-6">
+        <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
           <div className="flex items-center justify-between">
             <p className="font-extrabold tracking-tight">گردش حساب</p>
             <button
@@ -396,7 +396,7 @@ function Dashboard() {
         </div>
 
         {/* Cards */}
-        <div className="rounded-3xl border border-border bg-surface p-6">
+        <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
           <div className="flex items-center justify-between">
             <p className="font-extrabold tracking-tight">کارت‌های من</p>
             <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("card")}>
@@ -455,7 +455,7 @@ function Dashboard() {
 
       {/* Dialogs */}
       <CashDialog
-        mode={dialog}
+        mode={dialog === "convert" ? null : dialog}
         busy={busy}
         wallet={w}
         onClose={() => setDialog(null)}
@@ -500,7 +500,7 @@ function GoldPanel({
       : g <= wallet.gold);
 
   return (
-    <div className="rounded-3xl border border-border bg-surface p-6">
+    <div className="min-w-0 rounded-3xl border border-border bg-surface p-6">
       <div className="flex items-center justify-between">
         <p className="font-extrabold tracking-tight">معامله طلا</p>
         <span className="text-[10px] text-muted-foreground">کارمزد ۰٫۶٪ شفاف</span>

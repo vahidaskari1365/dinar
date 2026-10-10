@@ -52,8 +52,8 @@ export function BankCard({ className = "" }: { className?: string }) {
         style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
         className="relative aspect-[8/5] w-full select-none rounded-[1.75rem] p-6 md:p-7"
       >
-        {/* Card body — layered gold on charcoal */}
-        <div className="absolute inset-0 rounded-[1.75rem] bg-[linear-gradient(135deg,oklch(0.27_0.035_80)_0%,oklch(0.18_0.02_78)_45%,oklch(0.25_0.05_85)_100%)]" />
+        {/* Card body — layered gold on emerald vault */}
+        <div className="absolute inset-0 rounded-[1.75rem] bg-[linear-gradient(135deg,oklch(0.26_0.035_165)_0%,oklch(0.17_0.018_162)_45%,oklch(0.24_0.05_168)_100%)]" />
 
         {/* Holographic foil — subtle conic sheen */}
         <div className="absolute inset-0 rounded-[1.75rem] bg-[conic-gradient(from_210deg_at_70%_30%,transparent_0deg,oklch(0.85_0.12_88/14%)_60deg,transparent_130deg,oklch(0.8_0.1_95/10%)_220deg,transparent_300deg)]" />

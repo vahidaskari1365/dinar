@@ -51,66 +51,67 @@
 
 :root {
   --radius: 1rem;
-  /* Dark fintech world — warm charcoal, single gold accent */
-  --background: oklch(0.145 0.006 84);
-  --foreground: oklch(0.965 0.004 84);
-  --card: oklch(0.185 0.008 82);
-  --card-foreground: oklch(0.965 0.004 84);
-  --popover: oklch(0.19 0.008 82);
-  --popover-foreground: oklch(0.965 0.004 84);
-  --primary: oklch(0.8 0.135 85);
-  --primary-foreground: oklch(0.16 0.03 85);
-  --secondary: oklch(0.24 0.01 82);
-  --secondary-foreground: oklch(0.965 0.004 84);
-  --muted: oklch(0.23 0.008 82);
-  --muted-foreground: oklch(0.68 0.012 82);
-  --accent: oklch(0.25 0.015 85);
+  /* Emerald vault + gold — banking color psychology:
+     deep green = trust, security, money, growth · gold = wealth, the Dinar brand */
+  --background: oklch(0.155 0.014 168);
+  --foreground: oklch(0.965 0.005 168);
+  --card: oklch(0.195 0.017 166);
+  --card-foreground: oklch(0.965 0.005 168);
+  --popover: oklch(0.205 0.017 166);
+  --popover-foreground: oklch(0.965 0.005 168);
+  --primary: oklch(0.82 0.135 85);
+  --primary-foreground: oklch(0.17 0.03 85);
+  --secondary: oklch(0.25 0.018 166);
+  --secondary-foreground: oklch(0.965 0.005 168);
+  --muted: oklch(0.235 0.015 166);
+  --muted-foreground: oklch(0.70 0.015 166);
+  --accent: oklch(0.26 0.022 166);
   --accent-foreground: oklch(0.93 0.04 85);
   --destructive: oklch(0.62 0.2 25);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.8 0.135 85 / 55%);
-  --chart-1: oklch(0.8 0.135 85);
+  --ring: oklch(0.82 0.135 85 / 55%);
+  --chart-1: oklch(0.82 0.135 85);
   --chart-2: oklch(0.72 0.15 162);
-  --chart-3: oklch(0.65 0.1 82);
-  --chart-4: oklch(0.5 0.08 82);
+  --chart-3: oklch(0.65 0.1 168);
+  --chart-4: oklch(0.5 0.07 168);
   --chart-5: oklch(0.85 0.09 92);
-  --sidebar: oklch(0.185 0.008 82);
-  --sidebar-foreground: oklch(0.965 0.004 84);
-  --sidebar-primary: oklch(0.8 0.135 85);
-  --sidebar-primary-foreground: oklch(0.16 0.03 85);
-  --sidebar-accent: oklch(0.25 0.015 85);
+  --sidebar: oklch(0.195 0.017 166);
+  --sidebar-foreground: oklch(0.965 0.005 168);
+  --sidebar-primary: oklch(0.82 0.135 85);
+  --sidebar-primary-foreground: oklch(0.17 0.03 85);
+  --sidebar-accent: oklch(0.26 0.022 166);
   --sidebar-accent-foreground: oklch(0.93 0.04 85);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.8 0.135 85 / 55%);
+  --sidebar-ring: oklch(0.82 0.135 85 / 55%);
   /* Brand tokens */
-  --gold: oklch(0.8 0.135 85);
+  --gold: oklch(0.82 0.135 85);
   --gold-soft: oklch(0.87 0.09 90);
   --gold-deep: oklch(0.6 0.11 78);
-  --success: oklch(0.72 0.15 162);
-  --surface: oklch(0.165 0.008 82);
-  --surface-2: oklch(0.205 0.01 82);
+  --success: oklch(0.74 0.15 162);
+  --surface: oklch(0.175 0.016 166);
+  --surface-2: oklch(0.215 0.017 166);
 }
 
 .dark {
-  --background: oklch(0.145 0.006 84);
-  --foreground: oklch(0.965 0.004 84);
-  --card: oklch(0.185 0.008 82);
-  --card-foreground: oklch(0.965 0.004 84);
-  --popover: oklch(0.19 0.008 82);
-  --popover-foreground: oklch(0.965 0.004 84);
-  --primary: oklch(0.8 0.135 85);
-  --primary-foreground: oklch(0.16 0.03 85);
-  --secondary: oklch(0.24 0.01 82);
-  --secondary-foreground: oklch(0.965 0.004 84);
-  --muted: oklch(0.23 0.008 82);
-  --muted-foreground: oklch(0.68 0.012 82);
-  --accent: oklch(0.25 0.015 85);
+  --background: oklch(0.155 0.014 168);
+  --foreground: oklch(0.965 0.005 168);
+  --card: oklch(0.195 0.017 166);
+  --card-foreground: oklch(0.965 0.005 168);
+  --popover: oklch(0.205 0.017 166);
+  --popover-foreground: oklch(0.965 0.005 168);
+  --primary: oklch(0.82 0.135 85);
+  --primary-foreground: oklch(0.17 0.03 85);
+  --secondary: oklch(0.25 0.018 166);
+  --secondary-foreground: oklch(0.965 0.005 168);
+  --muted: oklch(0.235 0.015 166);
+  --muted-foreground: oklch(0.70 0.015 166);
+  --accent: oklch(0.26 0.022 166);
   --accent-foreground: oklch(0.93 0.04 85);
   --destructive: oklch(0.62 0.2 25);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.8 0.135 85 / 55%);
+  --ring: oklch(0.82 0.135 85 / 55%);
 }
 
 @layer base {
@@ -119,6 +120,11 @@
   }
   html {
     scroll-behavior: smooth;
+  }
+  html,
+  body {
+    /* kill any accidental horizontal pan on mobile — decorative blobs stay clipped */
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground;
@@ -139,12 +145,12 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.32 0.012 82);
+  background: oklch(0.32 0.018 166);
   border-radius: 8px;
-  border: 2px solid oklch(0.145 0.006 84);
+  border: 2px solid oklch(0.155 0.014 168);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.45 0.03 85);
+  background: oklch(0.45 0.03 166);
 }
 
 /* Liquid glass surface with physical edge refraction */
@@ -157,7 +163,7 @@
 }
 
 .glass-strong {
-  background: oklch(0.16 0.008 82 / 96%);
+  background: oklch(0.17 0.015 167 / 96%);
   backdrop-filter: blur(24px) saturate(1.5);
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border: 1px solid oklch(1 0 0 / 10%);
@@ -217,10 +223,10 @@
 @keyframes breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 0 oklch(0.72 0.15 162 / 45%);
+    box-shadow: 0 0 0 0 oklch(0.74 0.15 162 / 45%);
   }
   50% {
-    box-shadow: 0 0 0 7px oklch(0.72 0.15 162 / 0%);
+    box-shadow: 0 0 0 7px oklch(0.74 0.15 162 / 0%);
   }
 }
 .breathe {
@@ -327,7 +333,7 @@
   z-index: -1;
   inset: 1px;
   border-radius: inherit;
-  background: oklch(0.16 0.01 82 / 97%);
+  background: oklch(0.175 0.015 167 / 97%);
 }
 
 /* Blueprint grid with radial fade — hero backdrop */
@@ -453,7 +459,7 @@
 
 /* Price flash on update */
 @keyframes flash-up {
-  0% { color: oklch(0.72 0.15 162); }
+  0% { color: oklch(0.74 0.15 162); }
   100% { color: inherit; }
 }
 @keyframes flash-down {
@@ -479,7 +485,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, oklch(0.1 0.006 84 / 55%) 100%);
+  background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, oklch(0.11 0.012 168 / 55%) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {

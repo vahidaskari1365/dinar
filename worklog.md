@@ -79,3 +79,22 @@ Work Log:
 Stage Summary:
 - Repo live at https://github.com/vahidaskari1365/dinar (branch main, 114 files)
 - .env and database files excluded from repository
+
+---
+Task ID: pwa-responsive-theme
+Agent: Z.ai Code (main)
+Task: Mobile responsiveness fixes + PWA support + psychology-based color theme
+
+Work Log:
+- Diagnosed 236px horizontal overflow at 390px viewport: GoldChart SVG (fixed 560px width attr) blew out CSS grid min-content; fixed with viewBox + w-full + min-w-0 on all wallet-demo grid children
+- Hero: mobile price chips moved from absolute overlap to tidy flex row under the card (desktop keeps floating chips via separate lg-only set); h1 sized down for 360px screens; stats grid tightened
+- Wallet IRR card: badge stacks above balance on mobile (max-sm:flex-col-reverse), balance number responsive text-3xl→5xl
+- Fixed pre-existing TS error: CashDialog mode prop rejected "convert" (mapped to null at call site)
+- Theme rebrand on color psychology: warm charcoal → deep emerald vault (oklch hue 168) + gold primary kept; updated all tokens, hardcoded gradients (bank card, bento card, wallet card), auroras, scrollbar, vignette, conic-frame
+- PWA: app/manifest.ts (standalone, RTL fa, 3 icons), public/sw.js (cache-first statics, network-first pages, API never cached), PwaProvider (SW registration prod-only + beforeinstallprompt install chip with dismiss persistence), icons generated via image-gen + sharp (192/512/maskable/apple-touch/favicon), layout metadata (manifest, appleWebApp, themeColor #0a1612, viewportFit cover), footer safe-area padding
+- Verified via agent-browser at 390/768/1440px: overflow=0 on all, deposit dialog + transaction toast work, manifest served, SW controlled; desktop hero chips anchored to card (stale SW cache diagnosed and resolved)
+
+Stage Summary:
+- Site fully responsive on mobile/tablet/desktop (zero horizontal overflow)
+- Installable PWA with offline shell + install prompt
+- New emerald+gold banking psychology theme applied site-wide

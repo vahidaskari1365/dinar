@@ -11,7 +11,7 @@ export function CtaBanner() {
           {/* inner aurora */}
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div className="aurora-a absolute -top-24 left-1/4 size-96 rounded-full bg-[radial-gradient(circle,oklch(0.6_0.12_85/22%),transparent_65%)] blur-3xl" />
-            <div className="aurora-b absolute -bottom-28 right-1/5 size-96 rounded-full bg-[radial-gradient(circle,oklch(0.5_0.09_95/18%),transparent_65%)] blur-3xl" />
+            <div className="aurora-b absolute -bottom-28 right-1/5 size-96 rounded-full bg-[radial-gradient(circle,oklch(0.5_0.09_168/20%),transparent_65%)] blur-3xl" />
             <Sparkles className="twinkle absolute right-[12%] top-8 size-5 text-primary/70" />
             <Sparkles className="twinkle absolute bottom-10 left-[10%] size-4 text-primary/50" style={{ animationDelay: "1.4s" }} />
             <span className="twinkle absolute left-[28%] top-12 size-1.5 rounded-full bg-primary shadow-[0_0_12px_oklch(0.85_0.14_88)]" />

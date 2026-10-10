@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { PwaProvider } from "@/components/pwa";
 
 const vazirmatn = Vazirmatn({
   variable: "--font-vazir",
@@ -34,6 +35,20 @@ export const metadata: Metadata = {
     "سود ماهانه",
   ],
   authors: [{ name: "Dinar Labs" }],
+  manifest: "/manifest.webmanifest",
+  applicationName: "دینار",
+  appleWebApp: {
+    capable: true,
+    title: "دینار",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     title: "دینار — بانک دیجیتال جهانی",
     description:
@@ -50,9 +65,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e0d0b",
+  themeColor: "#0a1612",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -66,6 +82,7 @@ export default function RootLayout({
         className={`${vazirmatn.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground grain`}
       >
         {children}
+        <PwaProvider />
         <Toaster />
       </body>
     </html>
