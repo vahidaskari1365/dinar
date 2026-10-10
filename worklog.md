@@ -62,3 +62,20 @@ Stage Summary:
 - lint صفر خطا؛ کنسول و page errors مرورگر صفر؛ همه APIها 200
 - تست Agent Browser: پری‌لودر ✓، هیرو دسکتاپ 1440 ✓، تیکر زنده ✓، سکه سه‌بعدی رخ/نیم‌رخ ✓، نمودار و ماشین‌حساب طلا (۵۰م → +۲م ماهانه / ۸۰,۰۵۱,۶۱۱ سالانه / ۶٫۱۴ گرم) ✓، واریز ۲م تومان در دمو (موجودی ۱۹,۴۲۷,۲۵۰ + توست) ✓، موبایل 390px (هیرو/کارت/طلا/فوتر) ✓
 - فایل‌های جدید: motion-kit.tsx، preloader.tsx، scroll-progress.tsx، market-ticker.tsx، gold-vault.tsx، cta.tsx، api/prices/history/route.ts
+
+---
+Task ID: github-push
+Agent: Z.ai Code (main)
+Task: Push project to GitHub repository vahidaskari1365/dinar
+
+Work Log:
+- Audited tracked files; found .env, db/custom.db, .zscripts/dev.pid tracked (should not be on GitHub)
+- Untracked sensitive files; extended .gitignore (db/*.db, *.pid)
+- Rebuilt history as a single clean commit (old UUID-named commits discarded) so .env/db never appear in pushed history
+- Set repo-local git identity to vahidaskari1365
+- Added origin remote with token auth and pushed main (commit 52bcee0)
+- Verified via git ls-remote: origin/main == local main
+
+Stage Summary:
+- Repo live at https://github.com/vahidaskari1365/dinar (branch main, 114 files)
+- .env and database files excluded from repository
